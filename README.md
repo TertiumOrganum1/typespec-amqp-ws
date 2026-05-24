@@ -268,18 +268,19 @@ model M { payload: MPayload; }
 - AsyncAPI 3.1.
 - JSON output (только YAML).
 
-## Документация и примеры
+## Документация
 
-Пакет включает дополнительные материалы в собственных папках. После установки они доступны в `node_modules/@tertiumorganum/typespec-amqp-ws/`:
+Подробная документация — в [docs/](docs/):
+- [docs/usage.md](docs/usage.md) — установка, конфигурация, синтаксис, поддерживаемые типы, типичные сценарии.
+- [docs/architecture.md](docs/architecture.md) — внутреннее устройство эмиттера, ключевые решения, точки расширения.
 
-- `docs/usage.md` — установка, конфигурация, синтаксис, поддерживаемые типы, типичные сценарии.
-- `docs/architecture.md` — внутреннее устройство эмиттера, ключевые решения, точки расширения.
-- `examples/amqp-publish.tsp` — простой AMQP publisher.
-- `examples/amqp-consume.tsp` — простой AMQP consumer.
-- `examples/ws-discriminator.tsp` — WebSocket с literal-дискриминатором.
-- `examples/ws-reply.tsp` — WebSocket с request/reply.
+## Примеры
 
-Также эти файлы можно просмотреть на странице пакета npm через вкладку **Code**.
+В [examples/](examples/):
+- [amqp-publish.tsp](examples/amqp-publish.tsp) — простой AMQP publisher.
+- [amqp-consume.tsp](examples/amqp-consume.tsp) — простой AMQP consumer.
+- [ws-discriminator.tsp](examples/ws-discriminator.tsp) — WebSocket с literal-дискриминатором.
+- [ws-reply.tsp](examples/ws-reply.tsp) — WebSocket с request/reply.
 
 ## Лицензия
 

@@ -1,9 +1,25 @@
 {
   "name": "@tertiumorganum/typespec-amqp-ws",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "TypeSpec emitter for AsyncAPI 3.0 covering AMQP (RabbitMQ) and WebSocket transports",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TertiumOrganum1/typespec-amqp-ws.git"
+  },
+  "homepage": "https://github.com/TertiumOrganum1/typespec-amqp-ws#readme",
+  "bugs": {
+    "url": "https://github.com/TertiumOrganum1/typespec-amqp-ws/issues"
+  },
+  "keywords": [
+    "typespec",
+    "asyncapi",
+    "amqp",
+    "rabbitmq",
+    "websocket",
+    "emitter"
+  ],
   "engines": {
     "node": ">=22.0.0"
   },

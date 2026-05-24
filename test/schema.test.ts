@@ -12,32 +12,32 @@ describe("schema emitter — smoke", () => {
 describe("schema emitter — forbidden types", () => {
   test("uint32 raises unsupported-sized-int", async () => {
     const r = await emit(`namespace T; model M { foo: uint32; }`);
-    expect(r.diagnostics.some((d) => d.code === "@tertiumorganum/typespec-amqp-ws/unsupported-sized-int")).toBe(true);
+    expect(r.diagnostics.some((d) => d.code === "@etc-utils/typespec-amqp-ws/unsupported-sized-int")).toBe(true);
   });
 
   test("int64 raises unsupported-int64", async () => {
     const r = await emit(`namespace T; model M { foo: int64; }`);
-    expect(r.diagnostics.some((d) => d.code === "@tertiumorganum/typespec-amqp-ws/unsupported-int64")).toBe(true);
+    expect(r.diagnostics.some((d) => d.code === "@etc-utils/typespec-amqp-ws/unsupported-int64")).toBe(true);
   });
 
   test("float64 raises unsupported-float", async () => {
     const r = await emit(`namespace T; model M { foo: float64; }`);
-    expect(r.diagnostics.some((d) => d.code === "@tertiumorganum/typespec-amqp-ws/unsupported-float")).toBe(true);
+    expect(r.diagnostics.some((d) => d.code === "@etc-utils/typespec-amqp-ws/unsupported-float")).toBe(true);
   });
 
   test("safeint raises unsupported-fuzzy-numeric", async () => {
     const r = await emit(`namespace T; model M { foo: safeint; }`);
-    expect(r.diagnostics.some((d) => d.code === "@tertiumorganum/typespec-amqp-ws/unsupported-fuzzy-numeric")).toBe(true);
+    expect(r.diagnostics.some((d) => d.code === "@etc-utils/typespec-amqp-ws/unsupported-fuzzy-numeric")).toBe(true);
   });
 
   test("utcDateTime raises unsupported-temporal", async () => {
     const r = await emit(`namespace T; model M { foo: utcDateTime; }`);
-    expect(r.diagnostics.some((d) => d.code === "@tertiumorganum/typespec-amqp-ws/unsupported-temporal")).toBe(true);
+    expect(r.diagnostics.some((d) => d.code === "@etc-utils/typespec-amqp-ws/unsupported-temporal")).toBe(true);
   });
 
   test("url raises unsupported-url", async () => {
     const r = await emit(`namespace T; model M { foo: url; }`);
-    expect(r.diagnostics.some((d) => d.code === "@tertiumorganum/typespec-amqp-ws/unsupported-url")).toBe(true);
+    expect(r.diagnostics.some((d) => d.code === "@etc-utils/typespec-amqp-ws/unsupported-url")).toBe(true);
   });
 
   test("bytes → format binary", async () => {
@@ -91,7 +91,7 @@ describe("schema emitter — enums", () => {
 
   test("numeric enum value raises non-string-enum", async () => {
     const r = await emit(`namespace T; enum X { A: 1, B: 2 }`);
-    expect(r.diagnostics.some((d) => d.code === "@tertiumorganum/typespec-amqp-ws/non-string-enum")).toBe(true);
+    expect(r.diagnostics.some((d) => d.code === "@etc-utils/typespec-amqp-ws/non-string-enum")).toBe(true);
   });
 });
 
@@ -285,7 +285,7 @@ describe("schema emitter — anonymous models forbidden", () => {
         payload: { foo: string };
       }
     `);
-    expect(r.diagnostics.some((d) => d.code === "@tertiumorganum/typespec-amqp-ws/anonymous-model")).toBe(true);
+    expect(r.diagnostics.some((d) => d.code === "@etc-utils/typespec-amqp-ws/anonymous-model")).toBe(true);
   });
 
   test("named nested model is fine", async () => {

@@ -1,9 +1,9 @@
-# Использование `@tertiumorganum/typespec-amqp-ws`
+# Использование `@etc-utils/typespec-amqp-ws`
 
 ## Установка
 
 ```bash
-npm install -D @tertiumorganum/typespec-amqp-ws @typespec/compiler @typespec/asset-emitter
+npm install -D @etc-utils/typespec-amqp-ws @typespec/compiler @typespec/asset-emitter
 ```
 
 Требования:
@@ -12,15 +12,15 @@ npm install -D @tertiumorganum/typespec-amqp-ws @typespec/compiler @typespec/ass
 
 ## Конфигурация
 
-В корне папки с TypeSpec-описанием сервиса (например, `<service>/asyncapi/`) создаётся файл `tspconfig.yaml`. Эмиттер `@tertiumorganum/typespec-amqp-ws` имеет два emit-таргета: `/amqp` и `/ws`. Один проект использует **один** из них.
+В корне папки с TypeSpec-описанием сервиса (например, `<service>/asyncapi/`) создаётся файл `tspconfig.yaml`. Эмиттер `@etc-utils/typespec-amqp-ws` имеет два emit-таргета: `/amqp` и `/ws`. Один проект использует **один** из них.
 
 ### Конфиг для AMQP-сервиса
 
 ```yaml
 emit:
-  - "@tertiumorganum/typespec-amqp-ws/amqp"
+  - "@etc-utils/typespec-amqp-ws/amqp"
 options:
-  "@tertiumorganum/typespec-amqp-ws/amqp":
+  "@etc-utils/typespec-amqp-ws/amqp":
     file-type: yaml          # yaml (default) или json
     output-file: "asyncapi.yaml"
     new-line: "lf"           # lf (default) или crlf
@@ -31,16 +31,16 @@ output-dir: "{project-root}/tsp-output"
 
 ```yaml
 emit:
-  - "@tertiumorganum/typespec-amqp-ws/ws"
+  - "@etc-utils/typespec-amqp-ws/ws"
 options:
-  "@tertiumorganum/typespec-amqp-ws/ws":
+  "@etc-utils/typespec-amqp-ws/ws":
     file-type: yaml
     output-file: "asyncapi.yaml"
     new-line: "lf"
 output-dir: "{project-root}/tsp-output"
 ```
 
-После компиляции (`tsp compile .`) сгенерированный YAML лежит в `tsp-output/@tertiumorganum/typespec-amqp-ws/asyncapi.yaml`. Дальнейший пайплайн (redocly lint, modelina codegen, документация) идёт от этого файла.
+После компиляции (`tsp compile .`) сгенерированный YAML лежит в `tsp-output/@etc-utils/typespec-amqp-ws/asyncapi.yaml`. Дальнейший пайплайн (redocly lint, modelina codegen, документация) идёт от этого файла.
 
 ## Структура проекта
 
@@ -139,7 +139,7 @@ model M { payload: MPayload; }
 ## Полный пример: AMQP-сервис
 
 ```typespec
-import "@tertiumorganum/typespec-amqp-ws";
+import "@etc-utils/typespec-amqp-ws";
 
 using TspAsyncApi;
 using TspAsyncApi.Amqp;
@@ -192,7 +192,7 @@ op handleAck(): Notification;
 ## Полный пример: WebSocket с дискриминатором и reply
 
 ```typespec
-import "@tertiumorganum/typespec-amqp-ws";
+import "@etc-utils/typespec-amqp-ws";
 
 using TspAsyncApi;
 using TspAsyncApi.WebSocket;
@@ -254,7 +254,7 @@ op sendMessage(): SendMessage;
 
 ## Диагностики
 
-Эмиттер выдаёт следующие коды (все с префиксом `@tertiumorganum/typespec-amqp-ws/`):
+Эмиттер выдаёт следующие коды (все с префиксом `@etc-utils/typespec-amqp-ws/`):
 
 - `unsupported-sized-int`, `unsupported-int64`, `unsupported-float`, `unsupported-fuzzy-numeric`, `unsupported-temporal`, `unsupported-url` — попытка использовать запрещённый тип.
 - `anonymous-model`, `anonymous-return` — анонимная inline-модель в поле или return type.

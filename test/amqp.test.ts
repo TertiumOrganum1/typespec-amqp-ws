@@ -45,7 +45,7 @@ describe("amqp — @publish/@consume validation", () => {
     `,
       "amqp",
     );
-    expect(r.diagnostics.some((d) => d.code === "@tertiumorganum/typespec-amqp-ws/unknown-exchange-type")).toBe(
+    expect(r.diagnostics.some((d) => d.code === "@etc-utils/typespec-amqp-ws/unknown-exchange-type")).toBe(
       true,
     );
   });

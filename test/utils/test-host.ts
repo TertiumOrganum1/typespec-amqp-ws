@@ -27,11 +27,11 @@ export async function emit(
     libraries: [TypeSpecAmqpWsTestLibrary],
   });
 
-  const emitterName = `@tertiumorganum/typespec-amqp-ws/${target}`;
+  const emitterName = `@etc-utils/typespec-amqp-ws/${target}`;
   const subNamespace = target === "amqp" ? "TspAsyncApi.Amqp" : "TspAsyncApi.WebSocket";
 
   const wrapper: BasicTestRunner = createTestWrapper(host, {
-    autoImports: ["@tertiumorganum/typespec-amqp-ws"],
+    autoImports: ["@etc-utils/typespec-amqp-ws"],
     autoUsings: ["TspAsyncApi", subNamespace],
     compilerOptions: {
       emit: [emitterName],

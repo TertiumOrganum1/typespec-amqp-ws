@@ -1,4 +1,4 @@
-# @tertiumorganum/typespec-amqp-ws
+# @etc-utils/typespec-amqp-ws
 
 TypeSpec-эмиттер для генерации **AsyncAPI 3.0** спецификаций из лаконичных TypeSpec-описаний. Поддерживает два транспорта:
 
@@ -10,7 +10,7 @@ TypeSpec-эмиттер для генерации **AsyncAPI 3.0** специф�
 ## Установка
 
 ```bash
-npm install -D @tertiumorganum/typespec-amqp-ws @typespec/compiler @typespec/asset-emitter
+npm install -D @etc-utils/typespec-amqp-ws @typespec/compiler @typespec/asset-emitter
 ```
 
 Требования: Node.js 22+.
@@ -22,9 +22,9 @@ npm install -D @tertiumorganum/typespec-amqp-ws @typespec/compiler @typespec/ass
 ```yaml
 # Для сервиса с AMQP/RabbitMQ:
 emit:
-  - "@tertiumorganum/typespec-amqp-ws/amqp"
+  - "@etc-utils/typespec-amqp-ws/amqp"
 options:
-  "@tertiumorganum/typespec-amqp-ws/amqp":
+  "@etc-utils/typespec-amqp-ws/amqp":
     file-type: yaml          # yaml | json. Default: yaml
     output-file: "asyncapi.yaml"
     new-line: "lf"           # lf | crlf. Default: lf
@@ -34,7 +34,7 @@ output-dir: "{project-root}/tsp-output"
 ```yaml
 # Для сервиса с WebSocket-API:
 emit:
-  - "@tertiumorganum/typespec-amqp-ws/ws"
+  - "@etc-utils/typespec-amqp-ws/ws"
 output-dir: "{project-root}/tsp-output"
 ```
 
@@ -49,7 +49,7 @@ tsp compile .
 ## Полный AMQP-пример
 
 ```typespec
-import "@tertiumorganum/typespec-amqp-ws";
+import "@etc-utils/typespec-amqp-ws";
 
 using TspAsyncApi;
 using TspAsyncApi.Amqp;
@@ -106,7 +106,7 @@ op handleAck(): Notification;
 ## Полный WebSocket-пример
 
 ```typespec
-import "@tertiumorganum/typespec-amqp-ws";
+import "@etc-utils/typespec-amqp-ws";
 
 using TspAsyncApi;
 using TspAsyncApi.WebSocket;
@@ -242,7 +242,7 @@ model M { payload: MPayload; }
 
 ## Диагностика
 
-Все диагностики с префиксом `@tertiumorganum/typespec-amqp-ws/`:
+Все диагностики с префиксом `@etc-utils/typespec-amqp-ws/`:
 
 - `unsupported-sized-int`, `unsupported-int64`, `unsupported-float`, `unsupported-fuzzy-numeric`, `unsupported-temporal`, `unsupported-url` — попытка использовать запрещённый тип.
 - `anonymous-model`, `anonymous-return` — анонимная inline-модель.

@@ -2,7 +2,7 @@ import { createTypeSpecLibrary, paramMessage } from "@typespec/compiler";
 import { EmitterOptionsSchema, type EmitterOptions } from "./options.js";
 
 export const $lib = createTypeSpecLibrary({
-  name: "@tertiumorganum/typespec-amqp-ws",
+  name: "@etc-utils/typespec-amqp-ws",
   diagnostics: {
     "unsupported-sized-int": {
       severity: "error",

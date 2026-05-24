@@ -1,6 +1,6 @@
 {
-  "name": "@tertiumorganum/typespec-amqp-ws",
-  "version": "0.0.5",
+  "name": "@etc-utils/typespec-amqp-ws",
+  "version": "1.0.1",
   "description": "TypeSpec emitter for AsyncAPI 3.0 covering AMQP (RabbitMQ) and WebSocket transports",
   "license": "MIT",
   "type": "module",
@@ -21,7 +21,7 @@
     "emitter"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=20.0.0"
   },
   "exports": {
     ".": {
@@ -50,15 +50,15 @@
     "clean": "rm -rf dist coverage *.tsbuildinfo"
   },
   "peerDependencies": {
-    "@typespec/compiler": "^1.12.0",
-    "@typespec/asset-emitter": "^0.79.0"
+    "@typespec/compiler": "^1.0.0",
+    "@typespec/asset-emitter": "^0.70.0"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
-    "@typespec/compiler": "^1.12.0",
-    "@typespec/asset-emitter": "^0.79.0",
+    "@typespec/compiler": "^1.0.0",
+    "@typespec/asset-emitter": "^0.70.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.0.0",
     "typescript": "^5.4.0",

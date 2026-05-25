@@ -128,13 +128,13 @@ components:
       additionalProperties: false
       description: Acknowledgement command from a consumer back to the producer
   messages:
-    eventMessage:
+    EventMessage:
       payload:
         $ref: '#/components/schemas/EventMessage'
-    announcementMessage:
+    AnnouncementMessage:
       payload:
         $ref: '#/components/schemas/AnnouncementMessage'
-    ackCommand:
+    AckCommand:
       payload:
         $ref: '#/components/schemas/AckCommand'
 channels:
@@ -148,8 +148,8 @@ channels:
           type: direct
           durable: true
     messages:
-      eventMessage:
-        $ref: '#/components/messages/eventMessage'
+      EventMessage:
+        $ref: '#/components/messages/EventMessage'
   announcement-broadcast:
     bindings:
       amqp:
@@ -159,8 +159,8 @@ channels:
           type: fanout
           durable: true
     messages:
-      announcementMessage:
-        $ref: '#/components/messages/announcementMessage'
+      AnnouncementMessage:
+        $ref: '#/components/messages/AnnouncementMessage'
   ack-requests:
     address: v1-events-ack
     bindings:
@@ -171,15 +171,15 @@ channels:
           durable: true
           autoDelete: false
     messages:
-      ackCommand:
-        $ref: '#/components/messages/ackCommand'
+      AckCommand:
+        $ref: '#/components/messages/AckCommand'
 operations:
   publishEvent:
     action: send
     channel:
       $ref: '#/channels/event-created'
     messages:
-      - $ref: '#/channels/event-created/messages/eventMessage'
+      - $ref: '#/channels/event-created/messages/EventMessage'
     summary: publish a new event
     description: Publishes a domain event onto the events exchange.
   broadcastAnnouncement:
@@ -187,7 +187,7 @@ operations:
     channel:
       $ref: '#/channels/announcement-broadcast'
     messages:
-      - $ref: '#/channels/announcement-broadcast/messages/announcementMessage'
+      - $ref: '#/channels/announcement-broadcast/messages/AnnouncementMessage'
     summary: broadcast an announcement to all subscribers
     description: Fanout exchange — every bound queue receives the message.
   consumeAck:
@@ -195,7 +195,7 @@ operations:
     channel:
       $ref: '#/channels/ack-requests'
     messages:
-      - $ref: '#/channels/ack-requests/messages/ackCommand'
+      - $ref: '#/channels/ack-requests/messages/AckCommand'
     summary: consume acknowledgement commands
     description: Processes acknowledgement commands from downstream consumers.
 "

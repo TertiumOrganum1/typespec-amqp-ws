@@ -95,22 +95,43 @@ describe("amqp — channel/operation/message assembly", () => {
       is: "routingKey",
       exchange: { name: "wr-ex", type: "direct", durable: true },
     });
-    expect(d.channels.sendUpdate.messages.updateMsg).toEqual({
-      $ref: "#/components/messages/updateMsg",
+    expect(d.channels.sendUpdate.messages.UpdateMsg).toEqual({
+      $ref: "#/components/messages/UpdateMsg",
     });
     // operation
     expect(d.operations.sendUpdate.action).toBe("send");
     expect(d.operations.sendUpdate.summary).toBe("отправить обновление");
     expect(d.operations.sendUpdate.channel.$ref).toBe("#/channels/sendUpdate");
     expect(d.operations.sendUpdate.messages).toEqual([
-      { $ref: "#/channels/sendUpdate/messages/updateMsg" },
+      { $ref: "#/channels/sendUpdate/messages/UpdateMsg" },
     ]);
     // message
-    expect(d.components.messages.updateMsg.payload.$ref).toBe(
+    expect(d.components.messages.UpdateMsg.payload.$ref).toBe(
       "#/components/schemas/UpdateMsg",
     );
     // schema
     expect(d.components.schemas.UpdateMsg).toBeDefined();
+  });
+
+  test("default messageKey preserves PascalCase from model name", async () => {
+    const r = await emit(
+      `
+      @service(#{ title: "X" })
+      @info(#{ version: "1.0.0" })
+      namespace X;
+      model CacheInvalidateInstruction { id: string; }
+      @publish(#{
+        routingKey: "rk",
+        exchange: #{ name: "ex", type: "direct" },
+      })
+      op send(): CacheInvalidateInstruction;
+    `,
+      "amqp",
+    );
+    expectNoErrors(r);
+    const d = r.doc as any;
+    expect(d.components.messages.CacheInvalidateInstruction).toBeDefined();
+    expect(d.components.messages.cacheInvalidateInstruction).toBeUndefined();
   });
 
   test("@message overrides key and summary", async () => {

@@ -105,7 +105,7 @@ function prepareCommon(
 
   const channelKey = channelNameOverride ?? op.name;
   const override = program.stateMap(MessageKey).get(op) as MessageOverride | undefined;
-  const messageKey = override?.name ?? lowerFirst(rt.name);
+  const messageKey = override?.name ?? rt.name;
 
   doc.channels = doc.channels ?? {};
   doc.operations = doc.operations ?? {};
@@ -163,8 +163,4 @@ function cleanQueue(q: QueueConfig): Record<string, unknown> {
   if (q.autoDelete !== undefined) out.autoDelete = q.autoDelete;
   if (q.exclusive !== undefined) out.exclusive = q.exclusive;
   return out;
-}
-
-function lowerFirst(s: string): string {
-  return s.length === 0 ? s : s[0]!.toLowerCase() + s.slice(1);
 }

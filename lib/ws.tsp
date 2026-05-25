@@ -27,12 +27,6 @@ extern dec publish(target: Operation);
 extern dec consume(target: Operation);
 
 /**
- * Указывает модель ответного сообщения (request/reply pattern).
- * Реплай-сообщение автоматически добавится в канал и components.messages.
- */
-extern dec reply(target: Operation, replyType: Model);
-
-/**
  * Помечает сообщение операции как бинарное.
  * → components.messages.X.contentType: application/octet-stream
  */

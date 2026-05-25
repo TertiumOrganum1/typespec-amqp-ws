@@ -52,6 +52,36 @@ export const $lib = createTypeSpecLibrary({
         default: paramMessage`Операция '${"op"}' возвращает анонимную inline-модель. Объявите модель отдельно.`,
       },
     },
+    "anonymous-param": {
+      severity: "error",
+      messages: {
+        default: paramMessage`Операция '${"op"}' принимает анонимную inline-модель в параметре. Объявите модель отдельно.`,
+      },
+    },
+    "consume-must-return": {
+      severity: "error",
+      messages: {
+        default: paramMessage`Операция '${"op"}' помечена @consume, но не имеет returnType. Принимаемое сообщение объявляется через 'op X(): MessageModel;'.`,
+      },
+    },
+    "publish-must-have-param": {
+      severity: "error",
+      messages: {
+        default: paramMessage`Операция '${"op"}' помечена @publish, но не имеет параметра с payload. Отправляемое сообщение объявляется через 'op X(msg: MessageModel);'. Для @binary параметр не нужен.`,
+      },
+    },
+    "publish-multiple-params": {
+      severity: "error",
+      messages: {
+        default: paramMessage`Операция '${"op"}' помечена @publish и имеет более одного параметра. Допустим ровно один параметр — payload сообщения.`,
+      },
+    },
+    "binary-with-payload": {
+      severity: "error",
+      messages: {
+        default: paramMessage`Операция '${"op"}' помечена @binary — она не должна иметь ни параметра, ни returnType. Бинарное сообщение — это opaque-байты без JSON-payload; формат описывается в @doc.`,
+      },
+    },
     "non-string-enum": {
       severity: "error",
       messages: {
@@ -80,12 +110,6 @@ export const $lib = createTypeSpecLibrary({
       severity: "error",
       messages: {
         default: paramMessage`Неизвестный тип exchange: '${"type"}'. Поддерживаются: direct, fanout.`,
-      },
-    },
-    "reply-on-amqp": {
-      severity: "error",
-      messages: {
-        default: `@reply не поддерживается в AMQP-таргете — request/reply реализуется через два отдельных канала.`,
       },
     },
     "missing-doc": {

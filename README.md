@@ -76,7 +76,7 @@ model Notification {
   text: string;
 }
 
-// PUBLISH: один декоратор содержит всё — routing key, exchange, тип.
+// PUBLISH: payload в параметре операции, returnType — `void` (без ответа).
 @publish(#{
   routingKey: "notifications.created",
   exchange: #{
@@ -86,9 +86,9 @@ model Notification {
   },
 })
 @summary("Опубликовать новое уведомление")
-op sendNotification(): Notification;
+op sendNotification(notification: Notification): void;
 
-// CONSUME: чтение из именованной очереди, биндинг по routing key.
+// CONSUME: чтение из именованной очереди — сообщение в returnType.
 @consume(#{
   routingKey: "notifications.acknowledge",
   queue: #{
@@ -144,16 +144,15 @@ model SendMessageResponse {
   ok: boolean;
 }
 
-// Receive: сервер получает сообщение от клиента
+// Receive: returnType — принимаемое сообщение
 @consume
 @summary("Пользователь подключился к чату")
 op userJoined(): UserJoined;
 
-// Send + reply: request/reply pattern
+// Request/reply: параметр — отправляемое сообщение, returnType — ответ
 @publish
-@reply(SendMessageResponse)
 @summary("Отправить сообщение в чат")
-op sendMessage(): SendMessage;
+op sendMessage(request: SendMessage): SendMessageResponse;
 ```
 
 Все WebSocket-операции автоматически складываются на единый канал `/`. Это типичный паттерн WebSocket-API, где дискриминация сообщений происходит через literal-поле модели (например, `eventType`).
@@ -220,8 +219,8 @@ model M { payload: MPayload; }
 
 | Декоратор | Назначение |
 |---|---|
-| `@publish(#{ channelName?, description?, routingKey?, exchange })` | Операция-publisher → `action: send`. Exchange-типы: `direct`, `fanout`. `description` — описание канала; если опущено, берётся из `@doc(...)` самой операции. |
-| `@consume(#{ channelName?, description?, routingKey?, queue })` | Операция-consumer → `action: receive`. `description` — описание канала; если опущено, берётся из `@doc(...)` самой операции. |
+| `@publish(#{ channelName?, description?, routingKey?, exchange })` | Операция-publisher → `action: send`. Exchange-типы: `direct`, `fanout`. Payload — параметр операции (`op X(msg: M): void`). `description` — описание канала; fallback на `@doc(...)` операции. |
+| `@consume(#{ channelName?, description?, routingKey?, queue })` | Операция-consumer → `action: receive`. Принимаемое сообщение — returnType (`op X(): M`). `description` — описание канала; fallback на `@doc(...)` операции. |
 | `@summary(text)` | Стандартный из `@typespec/compiler`. Short summary операции. |
 | `@message(#{ name?, summary? })` | Override параметров сгенерированного message. |
 | `@doc(text)` | Стандартный. Длинное описание (description). |
@@ -230,10 +229,9 @@ model M { payload: MPayload; }
 
 | Декоратор | Назначение |
 |---|---|
-| `@publish` | Без аргументов. Операция → `action: send`. |
-| `@consume` | Без аргументов. Операция → `action: receive`. |
-| `@reply(MessageModel)` | Указывает модель сообщения-ответа (request/reply pattern). |
-| `@binary` | Помечает сообщение как бинарное → `contentType: application/octet-stream`. |
+| `@publish` | Без аргументов. Операция → `action: send`. Payload — параметр операции (`op X(msg: M): void`). `returnType ≠ void` означает reply (`op X(req: Req): Resp`). |
+| `@consume` | Без аргументов. Операция → `action: receive`. Принимаемое сообщение — returnType (`op X(): M`). |
+| `@binary` | Помечает операцию как бинарную: `op X(): void`, без параметра и без returnType. Эмиттит message только с `contentType: application/octet-stream`, формат описывается в `@doc`. |
 | `@message`, `@summary`, `@doc` | Как в AMQP. |
 
 ## Принципы преобразования
@@ -242,8 +240,9 @@ model M { payload: MPayload; }
 2. **Поле с `@doc`, ссылающееся на скаляр** — оборачивается в `allOf` с описанием. Копия поведения `@typespec/openapi3`: JSON Schema не допускает соседства `$ref` с `description`.
 3. **Namespace prefix**: вложенные namespace дают префикс через точку (`outer.Inner`). Top-level service-namespace в префикс не входит. Соответствует `@typespec/openapi3`.
 4. **AsyncAPI 3.0.0** — выбранная версия. 3.1 backward-совместима, но 3.0 проверена на широкой инструментальной поддержке.
-5. **Имя сообщения по умолчанию = имя модели payload верзатим.** `op X(): MyMessage` даёт ключ `MyMessage` в `components.messages` (без понижения регистра первой буквы). Если нужно отдельное имя — используйте `@message(#{ name: "..." })`.
+5. **Имя сообщения по умолчанию = имя модели payload верзатим.** Для `@consume op X(): MyMessage` и для `@publish op X(msg: MyMessage)` ключ в `components.messages` — `MyMessage` (без понижения регистра первой буквы). Если нужно отдельное имя — используйте `@message(#{ name: "..." })`.
 6. **Описание канала AMQP** наследуется от `@doc(...)` операции, если не задано явно в `@publish` / `@consume`. В подавляющем большинстве случаев канал и операция 1:1, и описание одно и то же — это убирает дублирование.
+7. **Симметричная семантика операций.** `@consume` — принимаемое сообщение в `returnType`. `@publish` — отправляемое сообщение в параметре; `returnType` отличный от `void` — это reply (request/reply pattern). `@binary` (WS) — без параметра и без returnType, payload в YAML не пишется, бинарный формат описывается в `@doc`.
 
 ## Диагностика
 

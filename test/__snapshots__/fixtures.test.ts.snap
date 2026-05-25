@@ -348,16 +348,6 @@ components:
         - payload
       additionalProperties: false
       description: Server pushes notification that an update is available
-    UpdateBinary:
-      type: object
-      properties:
-        data:
-          type: string
-          format: binary
-      required:
-        - data
-      additionalProperties: false
-      description: Binary update payload — opaque bytes
   messages:
     Ping:
       payload:
@@ -374,10 +364,10 @@ components:
     UpdateAvailable:
       payload:
         $ref: '#/components/schemas/UpdateAvailable'
-    UpdateBinary:
-      payload:
-        $ref: '#/components/schemas/UpdateBinary'
+    UploadUpdate:
       contentType: application/octet-stream
+      summary: upload the binary update blob
+      description: 'Бинарный фрейм без JSON-обёртки: [1B version][N bytes payload].'
 channels:
   /:
     address: /
@@ -392,8 +382,8 @@ channels:
         $ref: '#/components/messages/EchoResponse'
       UpdateAvailable:
         $ref: '#/components/messages/UpdateAvailable'
-      UpdateBinary:
-        $ref: '#/components/messages/UpdateBinary'
+      UploadUpdate:
+        $ref: '#/components/messages/UploadUpdate'
 operations:
   receivePing:
     action: receive
@@ -433,7 +423,8 @@ operations:
     channel:
       $ref: '#/channels/~1'
     messages:
-      - $ref: '#/channels/~1/messages/UpdateBinary'
+      - $ref: '#/channels/~1/messages/UploadUpdate'
     summary: upload the binary update blob
+    description: 'Бинарный фрейм без JSON-обёртки: [1B version][N bytes payload].'
 "
 `;

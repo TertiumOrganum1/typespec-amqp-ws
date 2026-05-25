@@ -101,10 +101,11 @@ describe("end-to-end fixtures", () => {
     // No reply where not declared
     expect(d.operations.sendPong.reply).toBeUndefined();
 
-    // Binary message: contentType set
-    expect(d.components.messages.UpdateBinary.contentType).toBe(
+    // Binary message: contentType set, no payload (opaque bytes)
+    expect(d.components.messages.UploadUpdate.contentType).toBe(
       "application/octet-stream",
     );
+    expect(d.components.messages.UploadUpdate.payload).toBeUndefined();
 
     // Action send vs receive
     expect(d.operations.receivePing.action).toBe("receive");

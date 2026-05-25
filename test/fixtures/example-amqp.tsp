@@ -108,7 +108,7 @@ model AckCommand {
 })
 @summary("publish a new event")
 @doc("Publishes a domain event onto the events exchange.")
-op publishEvent(): EventMessage;
+op publishEvent(message: EventMessage): void;
 
 @publish(#{
   channelName: "announcement-broadcast",
@@ -116,7 +116,7 @@ op publishEvent(): EventMessage;
 })
 @summary("broadcast an announcement to all subscribers")
 @doc("Fanout exchange — every bound queue receives the message.")
-op broadcastAnnouncement(): AnnouncementMessage;
+op broadcastAnnouncement(message: AnnouncementMessage): void;
 
 @consume(#{
   channelName: "ack-requests",

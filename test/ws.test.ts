@@ -11,7 +11,7 @@ describe("ws — publish/consume on default channel", () => {
       model Local { id: string; }
       model Global { id: string; }
       @consume op getLocal(): Local;
-      @publish op sendGlobal(): Global;
+      @publish op sendGlobal(msg: Global): void;
     `,
       "ws",
     );
@@ -28,7 +28,7 @@ describe("ws — publish/consume on default channel", () => {
     ]);
   });
 
-  test("@reply produces operations.X.reply", async () => {
+  test("request/reply: param = request, returnType = reply", async () => {
     const r = await emit(
       `
       @service(#{ title: "Demo" })
@@ -36,7 +36,7 @@ describe("ws — publish/consume on default channel", () => {
       namespace Demo;
       model Req { id: string; }
       model Resp { ok: boolean; }
-      @publish @reply(Resp) op send(): Req;
+      @publish op send(req: Req): Resp;
     `,
       "ws",
     );
@@ -48,34 +48,84 @@ describe("ws — publish/consume on default channel", () => {
     });
     expect(d.channels["/"].messages.Resp).toBeDefined();
     expect(d.components.messages.Resp.payload.$ref).toBe("#/components/schemas/Resp");
+    expect(d.components.messages.Req.payload.$ref).toBe("#/components/schemas/Req");
   });
 
-  test("@binary sets contentType on message", async () => {
-    // Бинарное сообщение объявляется через скаляр extends bytes — это даст schema { type: string, format: binary }.
-    // А @binary помечает сам message как application/octet-stream.
-    // ВАЖНО: возвращаемый тип всё ещё должен быть Model (а не Scalar), потому что builder проверяет.
-    // Для бинарных payload используем модель-обёртку или прямой scalar (поддержим scalar отдельно).
+  test("@binary emits message without payload (opaque bytes)", async () => {
     const r = await emit(
       `
       @service(#{ title: "Demo" })
       @info(#{ version: "1.0.0" })
       namespace Demo;
-      @doc("Бинарный апдейт")
-      scalar Update extends bytes;
-      model UpdatePayload { data: Update; }
-      @publish @binary op update(): UpdatePayload;
+      @publish
+      @binary
+      @summary("Send update blob")
+      @doc("Бинарный фрейм: [1B version][N bytes payload]")
+      op uploadUpdate(): void;
     `,
       "ws",
     );
     expectNoErrors(r);
-    expect((r.doc as any).components.messages.UpdatePayload.contentType).toBe(
-      "application/octet-stream",
-    );
-    expect((r.doc as any).components.schemas.Update).toEqual({
-      type: "string",
-      format: "binary",
-      description: "Бинарный апдейт",
+    const d = r.doc as any;
+    expect(d.components.messages.UploadUpdate).toEqual({
+      contentType: "application/octet-stream",
+      summary: "Send update blob",
+      description: "Бинарный фрейм: [1B version][N bytes payload]",
     });
+    expect(d.components.messages.UploadUpdate.payload).toBeUndefined();
+    expect(d.operations.uploadUpdate.action).toBe("send");
+  });
+
+  test("@binary with param raises binary-with-payload", async () => {
+    const r = await emit(
+      `
+      @service(#{ title: "Demo" })
+      @info(#{ version: "1.0.0" })
+      namespace Demo;
+      model M { id: string; }
+      @publish @binary op X(m: M): void;
+    `,
+      "ws",
+    );
+    expect(
+      r.diagnostics.some((d) => d.code === "@etc-utils/typespec-amqp-ws/binary-with-payload"),
+    ).toBe(true);
+  });
+
+  test("@publish without param raises publish-must-have-param", async () => {
+    const r = await emit(
+      `
+      @service(#{ title: "Demo" })
+      @info(#{ version: "1.0.0" })
+      namespace Demo;
+      model M { id: string; }
+      @publish op send(): M;
+    `,
+      "ws",
+    );
+    expect(
+      r.diagnostics.some(
+        (d) => d.code === "@etc-utils/typespec-amqp-ws/publish-must-have-param",
+      ),
+    ).toBe(true);
+  });
+
+  test("@consume without returnType raises consume-must-return", async () => {
+    const r = await emit(
+      `
+      @service(#{ title: "Demo" })
+      @info(#{ version: "1.0.0" })
+      namespace Demo;
+      model M { id: string; }
+      @consume op recv(m: M): void;
+    `,
+      "ws",
+    );
+    expect(
+      r.diagnostics.some(
+        (d) => d.code === "@etc-utils/typespec-amqp-ws/consume-must-return",
+      ),
+    ).toBe(true);
   });
 
   test("eventType discriminator works on WS payloads", async () => {

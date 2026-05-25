@@ -10,11 +10,10 @@ describe("amqp — @publish/@consume validation", () => {
       namespace X;
       model Msg { id: string; }
       @publish(#{ routingKey: "rk" })
-      op send(): Msg;
+      op send(msg: Msg): void;
     `,
       "amqp",
     );
-    // TypeSpec сам ловит отсутствие обязательного 'exchange' — наш дополнительный диагностик не нужен.
     expect(r.diagnostics.some((d) => d.severity === "error")).toBe(true);
   });
 
@@ -41,7 +40,7 @@ describe("amqp — @publish/@consume validation", () => {
       namespace X;
       model Msg { id: string; }
       @publish(#{ routingKey: "rk", exchange: #{ name: "e", type: "topic" } })
-      op send(): Msg;
+      op send(msg: Msg): void;
     `,
       "amqp",
     );
@@ -61,11 +60,69 @@ describe("amqp — @publish/@consume validation", () => {
         routingKey: "rk",
         exchange: #{ name: "e", type: "direct", durable: true },
       })
-      op send(): Msg;
+      op send(msg: Msg): void;
     `,
       "amqp",
     );
     expectNoErrors(r);
+  });
+
+  test("@publish without param raises publish-must-have-param", async () => {
+    const r = await emit(
+      `
+      @service(#{ title: "X" })
+      @info(#{ version: "1.0.0" })
+      namespace X;
+      model Msg { id: string; }
+      @publish(#{ routingKey: "rk", exchange: #{ name: "e", type: "direct" } })
+      op send(): Msg;
+    `,
+      "amqp",
+    );
+    expect(
+      r.diagnostics.some(
+        (d) => d.code === "@etc-utils/typespec-amqp-ws/publish-must-have-param",
+      ),
+    ).toBe(true);
+  });
+
+  test("@publish with multiple params raises publish-multiple-params", async () => {
+    const r = await emit(
+      `
+      @service(#{ title: "X" })
+      @info(#{ version: "1.0.0" })
+      namespace X;
+      model A { id: string; }
+      model B { id: string; }
+      @publish(#{ routingKey: "rk", exchange: #{ name: "e", type: "direct" } })
+      op send(a: A, b: B): void;
+    `,
+      "amqp",
+    );
+    expect(
+      r.diagnostics.some(
+        (d) => d.code === "@etc-utils/typespec-amqp-ws/publish-multiple-params",
+      ),
+    ).toBe(true);
+  });
+
+  test("@consume without returnType raises consume-must-return", async () => {
+    const r = await emit(
+      `
+      @service(#{ title: "X" })
+      @info(#{ version: "1.0.0" })
+      namespace X;
+      model Msg { id: string; }
+      @consume(#{ routingKey: "rk", queue: #{ name: "q" } })
+      op recv(m: Msg): void;
+    `,
+      "amqp",
+    );
+    expect(
+      r.diagnostics.some(
+        (d) => d.code === "@etc-utils/typespec-amqp-ws/consume-must-return",
+      ),
+    ).toBe(true);
   });
 });
 
@@ -82,14 +139,13 @@ describe("amqp — channel/operation/message assembly", () => {
         exchange: #{ name: "wr-ex", type: "direct", durable: true },
       })
       @summary("отправить обновление")
-      op sendUpdate(): UpdateMsg;
+      op sendUpdate(msg: UpdateMsg): void;
     `,
       "amqp",
     );
     expectNoErrors(r);
 
     const d = r.doc as any;
-    // channel
     expect(d.channels.sendUpdate.address).toBe("v1-update");
     expect(d.channels.sendUpdate.bindings.amqp).toEqual({
       is: "routingKey",
@@ -98,18 +154,15 @@ describe("amqp — channel/operation/message assembly", () => {
     expect(d.channels.sendUpdate.messages.UpdateMsg).toEqual({
       $ref: "#/components/messages/UpdateMsg",
     });
-    // operation
     expect(d.operations.sendUpdate.action).toBe("send");
     expect(d.operations.sendUpdate.summary).toBe("отправить обновление");
     expect(d.operations.sendUpdate.channel.$ref).toBe("#/channels/sendUpdate");
     expect(d.operations.sendUpdate.messages).toEqual([
       { $ref: "#/channels/sendUpdate/messages/UpdateMsg" },
     ]);
-    // message
     expect(d.components.messages.UpdateMsg.payload.$ref).toBe(
       "#/components/schemas/UpdateMsg",
     );
-    // schema
     expect(d.components.schemas.UpdateMsg).toBeDefined();
   });
 
@@ -124,7 +177,7 @@ describe("amqp — channel/operation/message assembly", () => {
         routingKey: "rk",
         exchange: #{ name: "ex", type: "direct" },
       })
-      op send(): CacheInvalidateInstruction;
+      op send(msg: CacheInvalidateInstruction): void;
     `,
       "amqp",
     );
@@ -146,7 +199,7 @@ describe("amqp — channel/operation/message assembly", () => {
         exchange: #{ name: "ex", type: "direct" },
       })
       @message(#{ name: "customMsgKey", summary: "сводка" })
-      op send(): Foo;
+      op send(msg: Foo): void;
     `,
       "amqp",
     );
@@ -191,7 +244,7 @@ describe("amqp — channel/operation/message assembly", () => {
       namespace X;
       model E { id: string; }
       @publish(#{ exchange: #{ name: "ex", type: "fanout", durable: true } })
-      op broadcast(): E;
+      op broadcast(msg: E): void;
     `,
       "amqp",
     );
@@ -214,7 +267,7 @@ describe("amqp — channel/operation/message assembly", () => {
         routingKey: "rk",
         exchange: #{ name: "ex", type: "direct" },
       })
-      op send(): E;
+      op send(msg: E): void;
     `,
       "amqp",
     );
@@ -259,7 +312,7 @@ describe("amqp — channel/operation/message assembly", () => {
         description: "канал для бродкаста",
         exchange: #{ name: "ex", type: "fanout" },
       })
-      op broadcast(): E;
+      op broadcast(msg: E): void;
     `,
       "amqp",
     );

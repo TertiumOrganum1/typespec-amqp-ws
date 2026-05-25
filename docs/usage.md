@@ -71,8 +71,8 @@ output-dir: "{project-root}/tsp-output"
 
 | Декоратор | Применяется к | Описание |
 |---|---|---|
-| `@publish(#{...})` | op | Операция-publisher → `action: send`. Поля: `channelName?`, `description?`, `routingKey?`, `exchange: #{name, type: "direct"\|"fanout", durable?, autoDelete?}`. `description?` — описание канала; если опущено, берётся из `@doc(...)` самой операции. |
-| `@consume(#{...})` | op | Операция-consumer → `action: receive`. Поля: `channelName?`, `description?`, `routingKey?`, `queue: #{name, durable?, autoDelete?, exclusive?}`. `description?` — описание канала; если опущено, берётся из `@doc(...)` самой операции. |
+| `@publish(#{...})` | op | Операция-publisher → `action: send`. Поля: `channelName?`, `description?`, `routingKey?`, `exchange: #{name, type: "direct"\|"fanout", durable?, autoDelete?}`. Payload — параметр операции (`op X(msg: M): void`). |
+| `@consume(#{...})` | op | Операция-consumer → `action: receive`. Поля: `channelName?`, `description?`, `routingKey?`, `queue: #{name, durable?, autoDelete?, exclusive?}`. Принимаемое сообщение — returnType (`op X(): M`). |
 | `@message(#{...})` | op | Override параметров сообщения: `name?`, `summary?` |
 
 ### Декораторы WebSocket (namespace `TspAsyncApi.WebSocket`)

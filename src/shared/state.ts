@@ -9,7 +9,6 @@ export const AmqpConsumeKey = Symbol.for("typespec-amqp-ws.amqp.consume");
 
 export const WsPublishKey = Symbol.for("typespec-amqp-ws.ws.publish");
 export const WsConsumeKey = Symbol.for("typespec-amqp-ws.ws.consume");
-export const WsReplyKey = Symbol.for("typespec-amqp-ws.ws.reply");
 export const WsBinaryKey = Symbol.for("typespec-amqp-ws.ws.binary");
 
 export const ChannelKey = Symbol.for("typespec-amqp-ws.channel");

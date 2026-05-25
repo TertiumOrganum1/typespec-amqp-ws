@@ -1,6 +1,6 @@
 // Generic WebSocket fixture for end-to-end testing.
-// Exercises: @publish, @consume, @reply, @binary, literal-type discriminator,
-// single default channel "/", server variables.
+// Exercises: @publish (no-reply + request/reply), @consume, @binary (opaque),
+// literal-type discriminator, single default channel "/", server variables.
 
 @service(#{ title: "Example WebSocket Service" })
 @info(#{
@@ -41,9 +41,6 @@ model UpdateAvailablePayload {
   url: string;
 }
 
-// Discriminator pattern: each message has eventType: "literal".
-// Emitter outputs { type: "string", const: "..." } in JSON Schema.
-
 @doc("Server sends a periodic ping; client should reply with Pong")
 model Ping {
   eventType: "ping";
@@ -79,11 +76,6 @@ model UpdateAvailable {
   payload: UpdateAvailablePayload;
 }
 
-@doc("Binary update payload — opaque bytes")
-model UpdateBinary {
-  data: bytes;
-}
-
 // ────────── Operations ──────────
 
 @consume
@@ -92,12 +84,11 @@ op receivePing(): Ping;
 
 @publish
 @summary("send a pong in response to a ping")
-op sendPong(): Pong;
+op sendPong(message: Pong): void;
 
 @publish
-@reply(EchoResponse)
 @summary("ask server to echo a message and wait for the response")
-op echo(): EchoRequest;
+op echo(request: EchoRequest): EchoResponse;
 
 @consume
 @summary("notification that an update is available")
@@ -106,4 +97,5 @@ op updateAvailable(): UpdateAvailable;
 @publish
 @binary
 @summary("upload the binary update blob")
-op uploadUpdate(): UpdateBinary;
+@doc("Бинарный фрейм без JSON-обёртки: [1B version][N bytes payload].")
+op uploadUpdate(): void;

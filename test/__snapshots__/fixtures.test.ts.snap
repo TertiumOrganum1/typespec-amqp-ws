@@ -1,0 +1,430 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`end-to-end fixtures > example-amqp YAML snapshot 1`] = `
+"asyncapi: 3.0.0
+info:
+  title: Example AMQP Service
+  version: 1.0.0
+  description: End-to-end test fixture covering AMQP publish/consume features.
+servers:
+  rabbit:
+    host: rabbit.example.com:5672
+    pathname: /example
+    protocol: amqp
+    description: Example RabbitMQ broker
+components:
+  schemas:
+    Tag:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Tag name
+        value:
+          type: string
+          description: Tag value
+      required:
+        - name
+        - value
+      additionalProperties: false
+      description: Key-value tag attached to events
+    EventPayload:
+      type: object
+      properties:
+        text:
+          type: string
+          description: Free-form text
+        category:
+          $ref: '#/components/schemas/EventCategory'
+        priority:
+          allOf:
+            - $ref: '#/components/schemas/Priority'
+          description: Optional priority override
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          description: Arbitrary tags
+        extra:
+          type: object
+          additionalProperties:
+            type: string
+          description: Arbitrary extension parameters
+      required:
+        - text
+        - category
+        - tags
+        - extra
+      additionalProperties: false
+      description: Detailed event payload
+    EventCategory:
+      type: string
+      title: EventCategory
+      enum:
+        - Created
+        - Updated
+        - Deleted
+      description: Category of an event
+    Priority:
+      type: string
+      title: Priority
+      enum:
+        - Low
+        - Normal
+        - High
+      description: Priority of a notification
+    EventMessage:
+      type: object
+      properties:
+        uid:
+          allOf:
+            - $ref: '#/components/schemas/Uuid'
+          description: Unique message identifier
+        sentAt:
+          $ref: '#/components/schemas/Microseconds'
+        payload:
+          $ref: '#/components/schemas/EventPayload'
+      required:
+        - uid
+        - sentAt
+        - payload
+      additionalProperties: false
+      description: Event message sent on the events exchange
+    Uuid:
+      type: string
+      description: UUID v7 identifier
+    Microseconds:
+      type: string
+      description: Unix timestamp microseconds as string (to avoid 64-bit precision loss)
+    AnnouncementMessage:
+      type: object
+      properties:
+        uid:
+          allOf:
+            - $ref: '#/components/schemas/Uuid'
+          description: Announcement identifier
+        message:
+          type: string
+          description: Announcement text
+      required:
+        - uid
+        - message
+      additionalProperties: false
+      description: Broadcast announcement, sent via fanout
+    AckCommand:
+      type: object
+      properties:
+        uid:
+          allOf:
+            - $ref: '#/components/schemas/Uuid'
+          description: Identifier of the original message being acknowledged
+        success:
+          type: boolean
+          description: Whether the consumer processed the message successfully
+        error:
+          type: string
+          description: Optional error description
+      required:
+        - uid
+        - success
+      additionalProperties: false
+      description: Acknowledgement command from a consumer back to the producer
+  messages:
+    EventMessage:
+      payload:
+        $ref: '#/components/schemas/EventMessage'
+    AnnouncementMessage:
+      payload:
+        $ref: '#/components/schemas/AnnouncementMessage'
+    AckCommand:
+      payload:
+        $ref: '#/components/schemas/AckCommand'
+channels:
+  event-created:
+    address: v1-events-created
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: events-exchange
+          type: direct
+          durable: true
+    messages:
+      EventMessage:
+        $ref: '#/components/messages/EventMessage'
+    description: Channel for individual domain events
+  announcement-broadcast:
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: announcements-fanout
+          type: fanout
+          durable: true
+    messages:
+      AnnouncementMessage:
+        $ref: '#/components/messages/AnnouncementMessage'
+    description: Fanout exchange — every bound queue receives the message.
+  ack-requests:
+    address: v1-events-ack
+    bindings:
+      amqp:
+        is: queue
+        queue:
+          name: ack-requests-queue
+          durable: true
+          autoDelete: false
+    messages:
+      AckCommand:
+        $ref: '#/components/messages/AckCommand'
+    description: Processes acknowledgement commands from downstream consumers.
+operations:
+  publishEvent:
+    action: send
+    channel:
+      $ref: '#/channels/event-created'
+    messages:
+      - $ref: '#/channels/event-created/messages/EventMessage'
+    summary: publish a new event
+    description: Publishes a domain event onto the events exchange.
+  broadcastAnnouncement:
+    action: send
+    channel:
+      $ref: '#/channels/announcement-broadcast'
+    messages:
+      - $ref: '#/channels/announcement-broadcast/messages/AnnouncementMessage'
+    summary: broadcast an announcement to all subscribers
+    description: Fanout exchange — every bound queue receives the message.
+  consumeAck:
+    action: receive
+    channel:
+      $ref: '#/channels/ack-requests'
+    messages:
+      - $ref: '#/channels/ack-requests/messages/AckCommand'
+    summary: consume acknowledgement commands
+    description: Processes acknowledgement commands from downstream consumers.
+"
+`;
+
+exports[`end-to-end fixtures > example-ws YAML snapshot 1`] = `
+"asyncapi: 3.0.0
+info:
+  title: Example WebSocket Service
+  version: 2.3.4
+  description: End-to-end test fixture covering WebSocket emitter features.
+  externalDocs:
+    url: https://example.com/docs
+servers:
+  public:
+    host: localhost:{port}
+    protocol: ws
+    pathname: /v1/ws
+    variables:
+      port:
+        default: '8080'
+        description: WebSocket port
+components:
+  schemas:
+    PingPayload:
+      type: object
+      properties:
+        ts:
+          type: string
+      required:
+        - ts
+      additionalProperties: false
+    PongPayload:
+      type: object
+      properties:
+        ts:
+          type: string
+      required:
+        - ts
+      additionalProperties: false
+    EchoRequestPayload:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+        - text
+      additionalProperties: false
+    EchoResponsePayload:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+        - text
+      additionalProperties: false
+    UpdateAvailablePayload:
+      type: object
+      properties:
+        version:
+          type: string
+        url:
+          type: string
+      required:
+        - version
+        - url
+      additionalProperties: false
+    Ping:
+      type: object
+      properties:
+        eventType:
+          type: string
+          const: ping
+        msgUid:
+          type: string
+        payload:
+          $ref: '#/components/schemas/PingPayload'
+      required:
+        - eventType
+        - msgUid
+        - payload
+      additionalProperties: false
+      description: Server sends a periodic ping; client should reply with Pong
+    Pong:
+      type: object
+      properties:
+        eventType:
+          type: string
+          const: pong
+        msgUid:
+          type: string
+        payload:
+          $ref: '#/components/schemas/PongPayload'
+      required:
+        - eventType
+        - msgUid
+        - payload
+      additionalProperties: false
+      description: Client responds to Ping
+    EchoRequest:
+      type: object
+      properties:
+        eventType:
+          type: string
+          const: echoRequest
+        msgUid:
+          type: string
+        payload:
+          $ref: '#/components/schemas/EchoRequestPayload'
+      required:
+        - eventType
+        - msgUid
+        - payload
+      additionalProperties: false
+      description: Client asks server to echo a message
+    EchoResponse:
+      type: object
+      properties:
+        eventType:
+          type: string
+          const: echoResponse
+        msgUid:
+          type: string
+        payload:
+          $ref: '#/components/schemas/EchoResponsePayload'
+      required:
+        - eventType
+        - msgUid
+        - payload
+      additionalProperties: false
+      description: Server reply with the echoed text
+    UpdateAvailable:
+      type: object
+      properties:
+        eventType:
+          type: string
+          const: updateAvailable
+        msgUid:
+          type: string
+        payload:
+          $ref: '#/components/schemas/UpdateAvailablePayload'
+      required:
+        - eventType
+        - msgUid
+        - payload
+      additionalProperties: false
+      description: Server pushes notification that an update is available
+  messages:
+    Ping:
+      payload:
+        $ref: '#/components/schemas/Ping'
+    Pong:
+      payload:
+        $ref: '#/components/schemas/Pong'
+    EchoRequest:
+      payload:
+        $ref: '#/components/schemas/EchoRequest'
+    EchoResponse:
+      payload:
+        $ref: '#/components/schemas/EchoResponse'
+    UpdateAvailable:
+      payload:
+        $ref: '#/components/schemas/UpdateAvailable'
+    UploadUpdate:
+      contentType: application/octet-stream
+      summary: upload the binary update blob
+      description: 'Бинарный фрейм без JSON-обёртки: [1B version][N bytes payload].'
+channels:
+  /:
+    address: /
+    messages:
+      Ping:
+        $ref: '#/components/messages/Ping'
+      Pong:
+        $ref: '#/components/messages/Pong'
+      EchoRequest:
+        $ref: '#/components/messages/EchoRequest'
+      EchoResponse:
+        $ref: '#/components/messages/EchoResponse'
+      UpdateAvailable:
+        $ref: '#/components/messages/UpdateAvailable'
+      UploadUpdate:
+        $ref: '#/components/messages/UploadUpdate'
+operations:
+  receivePing:
+    action: receive
+    channel:
+      $ref: '#/channels/~1'
+    messages:
+      - $ref: '#/channels/~1/messages/Ping'
+    summary: receive a ping from the server
+  sendPong:
+    action: send
+    channel:
+      $ref: '#/channels/~1'
+    messages:
+      - $ref: '#/channels/~1/messages/Pong'
+    summary: send a pong in response to a ping
+  echo:
+    action: send
+    channel:
+      $ref: '#/channels/~1'
+    messages:
+      - $ref: '#/channels/~1/messages/EchoRequest'
+    summary: ask server to echo a message and wait for the response
+    reply:
+      channel:
+        $ref: '#/channels/~1'
+      messages:
+        - $ref: '#/channels/~1/messages/EchoResponse'
+  updateAvailable:
+    action: receive
+    channel:
+      $ref: '#/channels/~1'
+    messages:
+      - $ref: '#/channels/~1/messages/UpdateAvailable'
+    summary: notification that an update is available
+  uploadUpdate:
+    action: send
+    channel:
+      $ref: '#/channels/~1'
+    messages:
+      - $ref: '#/channels/~1/messages/UploadUpdate'
+    summary: upload the binary update blob
+    description: 'Бинарный фрейм без JSON-обёртки: [1B version][N bytes payload].'
+"
+`;

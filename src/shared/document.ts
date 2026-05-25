@@ -90,11 +90,13 @@ export interface StringSchema {
 
 export interface BooleanSchema {
   type: "boolean";
+  const?: boolean;
   description?: string;
 }
 
 export interface IntegerSchema {
   type: "integer";
+  const?: number;
   description?: string;
 }
 

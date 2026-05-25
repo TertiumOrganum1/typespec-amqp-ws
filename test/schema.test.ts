@@ -202,6 +202,42 @@ describe("schema emitter — optional and literals", () => {
     expect((r.doc as any).components.schemas.M.required).toEqual(["kind"]);
   });
 
+  test("integer literal becomes const integer", async () => {
+    const r = await emit(`
+      namespace T;
+      model M { version: 1; }
+    `);
+    expectNoErrors(r);
+    expect((r.doc as any).components.schemas.M.properties.version).toEqual({
+      type: "integer",
+      const: 1,
+    });
+  });
+
+  test("non-integer numeric literal degrades to string const", async () => {
+    const r = await emit(`
+      namespace T;
+      model M { ratio: 1.5; }
+    `);
+    expectNoErrors(r);
+    expect((r.doc as any).components.schemas.M.properties.ratio).toEqual({
+      type: "string",
+      const: "1.5",
+    });
+  });
+
+  test("boolean literal becomes const boolean", async () => {
+    const r = await emit(`
+      namespace T;
+      model M { flag: true; }
+    `);
+    expectNoErrors(r);
+    expect((r.doc as any).components.schemas.M.properties.flag).toEqual({
+      type: "boolean",
+      const: true,
+    });
+  });
+
   test("eventType discriminator pattern", async () => {
     const r = await emit(`
       namespace T;

@@ -110,6 +110,15 @@ export class SchemaBuilder {
     if (type.kind === "String") {
       return { type: "string", const: type.value };
     }
+    if (type.kind === "Number") {
+      if (Number.isInteger(type.value)) {
+        return { type: "integer", const: type.value };
+      }
+      return { type: "string", const: String(type.value) };
+    }
+    if (type.kind === "Boolean") {
+      return { type: "boolean", const: type.value };
+    }
     if (type.kind === "Model") {
       // Array<T> и Record<T,V>
       if (isArrayModelType(this.program, type)) {

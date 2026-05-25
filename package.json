@@ -1,6 +1,6 @@
 {
   "name": "@etc-utils/typespec-amqp-ws",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "description": "TypeSpec emitter for AsyncAPI 3.0 covering AMQP (RabbitMQ) and WebSocket transports",
   "license": "MIT",
   "type": "module",
@@ -49,6 +49,8 @@
     "test:watch": "vitest",
     "clean": "rm -rf dist coverage *.tsbuildinfo",
     "release": "node scripts/release.mjs",
+    "release:public": "node scripts/release.mjs --public",
+    "release:internal": "node scripts/release.mjs --internal",
     "prepublishOnly": "npm run clean && npm run build && npm run test"
   },
   "peerDependencies": {

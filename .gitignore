@@ -6,3 +6,5 @@ coverage/
 *.tsbuildinfo
 /_*
 /docs/superpowers/
+/tmp/
+/*.tgz

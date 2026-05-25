@@ -18,13 +18,13 @@ describe("ws — publish/consume on default channel", () => {
     expectNoErrors(r);
 
     const d = r.doc as any;
-    expect(d.channels["/"].messages.local).toEqual({ $ref: "#/components/messages/local" });
-    expect(d.channels["/"].messages.global).toEqual({ $ref: "#/components/messages/global" });
+    expect(d.channels["/"].messages.Local).toEqual({ $ref: "#/components/messages/Local" });
+    expect(d.channels["/"].messages.Global).toEqual({ $ref: "#/components/messages/Global" });
     expect(d.operations.getLocal.action).toBe("receive");
     expect(d.operations.sendGlobal.action).toBe("send");
     expect(d.operations.getLocal.channel.$ref).toBe("#/channels/~1");
     expect(d.operations.getLocal.messages).toEqual([
-      { $ref: "#/channels/~1/messages/local" },
+      { $ref: "#/channels/~1/messages/Local" },
     ]);
   });
 
@@ -44,10 +44,10 @@ describe("ws — publish/consume on default channel", () => {
     const d = r.doc as any;
     expect(d.operations.send.reply).toEqual({
       channel: { $ref: "#/channels/~1" },
-      messages: [{ $ref: "#/channels/~1/messages/resp" }],
+      messages: [{ $ref: "#/channels/~1/messages/Resp" }],
     });
-    expect(d.channels["/"].messages.resp).toBeDefined();
-    expect(d.components.messages.resp.payload.$ref).toBe("#/components/schemas/Resp");
+    expect(d.channels["/"].messages.Resp).toBeDefined();
+    expect(d.components.messages.Resp.payload.$ref).toBe("#/components/schemas/Resp");
   });
 
   test("@binary sets contentType on message", async () => {
@@ -68,7 +68,7 @@ describe("ws — publish/consume on default channel", () => {
       "ws",
     );
     expectNoErrors(r);
-    expect((r.doc as any).components.messages.updatePayload.contentType).toBe(
+    expect((r.doc as any).components.messages.UpdatePayload.contentType).toBe(
       "application/octet-stream",
     );
     expect((r.doc as any).components.schemas.Update).toEqual({

@@ -58,7 +58,7 @@ function attach(
   }
 
   const override = program.stateMap(MessageKey).get(op) as MessageOverride | undefined;
-  const messageKey = override?.name ?? lowerFirst(rt.name);
+  const messageKey = override?.name ?? rt.name;
   const isBinary = program.stateMap(WsBinaryKey).has(op);
 
   doc.channels = doc.channels ?? {};
@@ -84,7 +84,7 @@ function attach(
   let replyBlock: AsyncApiOperation["reply"] | undefined;
   const replyType = program.stateMap(WsReplyKey).get(op) as Model | undefined;
   if (replyType && replyType.name) {
-    const replyKey = lowerFirst(replyType.name);
+    const replyKey = replyType.name;
     doc.components.messages[replyKey] = {
       payload: { $ref: `#/components/schemas/${replyType.name}` },
     };
@@ -110,10 +110,6 @@ function attach(
   if (description) operation.description = description;
   if (replyBlock) operation.reply = replyBlock;
   doc.operations[op.name] = operation;
-}
-
-function lowerFirst(s: string): string {
-  return s.length === 0 ? s : s[0]!.toLowerCase() + s.slice(1);
 }
 
 function escapePointer(s: string): string {

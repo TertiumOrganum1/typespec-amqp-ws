@@ -354,22 +354,22 @@ components:
       additionalProperties: false
       description: Binary update payload — opaque bytes
   messages:
-    ping:
+    Ping:
       payload:
         $ref: '#/components/schemas/Ping'
-    pong:
+    Pong:
       payload:
         $ref: '#/components/schemas/Pong'
-    echoRequest:
+    EchoRequest:
       payload:
         $ref: '#/components/schemas/EchoRequest'
-    echoResponse:
+    EchoResponse:
       payload:
         $ref: '#/components/schemas/EchoResponse'
-    updateAvailable:
+    UpdateAvailable:
       payload:
         $ref: '#/components/schemas/UpdateAvailable'
-    updateBinary:
+    UpdateBinary:
       payload:
         $ref: '#/components/schemas/UpdateBinary'
       contentType: application/octet-stream
@@ -377,58 +377,58 @@ channels:
   /:
     address: /
     messages:
-      ping:
-        $ref: '#/components/messages/ping'
-      pong:
-        $ref: '#/components/messages/pong'
-      echoRequest:
-        $ref: '#/components/messages/echoRequest'
-      echoResponse:
-        $ref: '#/components/messages/echoResponse'
-      updateAvailable:
-        $ref: '#/components/messages/updateAvailable'
-      updateBinary:
-        $ref: '#/components/messages/updateBinary'
+      Ping:
+        $ref: '#/components/messages/Ping'
+      Pong:
+        $ref: '#/components/messages/Pong'
+      EchoRequest:
+        $ref: '#/components/messages/EchoRequest'
+      EchoResponse:
+        $ref: '#/components/messages/EchoResponse'
+      UpdateAvailable:
+        $ref: '#/components/messages/UpdateAvailable'
+      UpdateBinary:
+        $ref: '#/components/messages/UpdateBinary'
 operations:
   receivePing:
     action: receive
     channel:
       $ref: '#/channels/~1'
     messages:
-      - $ref: '#/channels/~1/messages/ping'
+      - $ref: '#/channels/~1/messages/Ping'
     summary: receive a ping from the server
   sendPong:
     action: send
     channel:
       $ref: '#/channels/~1'
     messages:
-      - $ref: '#/channels/~1/messages/pong'
+      - $ref: '#/channels/~1/messages/Pong'
     summary: send a pong in response to a ping
   echo:
     action: send
     channel:
       $ref: '#/channels/~1'
     messages:
-      - $ref: '#/channels/~1/messages/echoRequest'
+      - $ref: '#/channels/~1/messages/EchoRequest'
     summary: ask server to echo a message and wait for the response
     reply:
       channel:
         $ref: '#/channels/~1'
       messages:
-        - $ref: '#/channels/~1/messages/echoResponse'
+        - $ref: '#/channels/~1/messages/EchoResponse'
   updateAvailable:
     action: receive
     channel:
       $ref: '#/channels/~1'
     messages:
-      - $ref: '#/channels/~1/messages/updateAvailable'
+      - $ref: '#/channels/~1/messages/UpdateAvailable'
     summary: notification that an update is available
   uploadUpdate:
     action: send
     channel:
       $ref: '#/channels/~1'
     messages:
-      - $ref: '#/channels/~1/messages/updateBinary'
+      - $ref: '#/channels/~1/messages/UpdateBinary'
     summary: upload the binary update blob
 "
 `;

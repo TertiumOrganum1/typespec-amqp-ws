@@ -95,14 +95,14 @@ describe("end-to-end fixtures", () => {
     // Reply pattern
     expect(d.operations.echo.reply).toBeDefined();
     expect(d.operations.echo.reply.messages).toEqual([
-      { $ref: "#/channels/~1/messages/echoResponse" },
+      { $ref: "#/channels/~1/messages/EchoResponse" },
     ]);
 
     // No reply where not declared
     expect(d.operations.sendPong.reply).toBeUndefined();
 
     // Binary message: contentType set
-    expect(d.components.messages.updateBinary.contentType).toBe(
+    expect(d.components.messages.UpdateBinary.contentType).toBe(
       "application/octet-stream",
     );
 

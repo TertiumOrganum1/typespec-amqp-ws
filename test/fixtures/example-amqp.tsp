@@ -102,6 +102,7 @@ model AckCommand {
 
 @publish(#{
   channelName: "event-created",
+  description: "Channel for individual domain events",
   routingKey: "v1-events-created",
   exchange: #{ name: "events-exchange", type: "direct", durable: true },
 })

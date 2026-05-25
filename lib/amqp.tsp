@@ -39,6 +39,9 @@ model PublishConfig {
   @doc("Имя канала в YAML (override). Default — имя операции верзатим")
   channelName?: string;
 
+  @doc("Описание канала. Если опущено — используется @doc(...) самой операции.")
+  description?: string;
+
   @doc("Routing key. Может быть опущен для fanout exchange")
   routingKey?: string;
 
@@ -50,6 +53,9 @@ model PublishConfig {
 model ConsumeConfig {
   @doc("Имя канала в YAML (override)")
   channelName?: string;
+
+  @doc("Описание канала. Если опущено — используется @doc(...) самой операции.")
+  description?: string;
 
   @doc("Routing key (биндинг очереди к exchange)")
   routingKey?: string;

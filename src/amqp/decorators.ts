@@ -20,12 +20,14 @@ export interface QueueConfig {
 
 export interface PublishConfig {
   channelName?: string;
+  description?: string;
   routingKey?: string;
   exchange?: ExchangeConfig;
 }
 
 export interface ConsumeConfig {
   channelName?: string;
+  description?: string;
   routingKey?: string;
   queue?: QueueConfig;
 }

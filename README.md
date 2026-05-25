@@ -172,6 +172,9 @@ op sendMessage(): SendMessage;
 | `T[]` | `{ type: array, items: <T> }` | slice/array |
 | `Record<T>` | `{ type: object, additionalProperties: <T> }` | `map[string]T` / `Record<string, T>` |
 | literal `"foo"` | `{ type: string, const: "foo" }` | константа |
+| literal `1` (integer) | `{ type: integer, const: 1 }` | константа (например, маркер версии) |
+| literal `1.5` (не integer) | `{ type: string, const: "1.5" }` | деградация — float'ы через API мы не передаём |
+| literal `true` / `false` | `{ type: boolean, const: <value> }` | константа |
 | `T \| null` | `{ type: [<base>, null] }` | pointer / nullable |
 | `foo?: T` | поле не входит в `required` | опциональное поле |
 
@@ -217,8 +220,8 @@ model M { payload: MPayload; }
 
 | Декоратор | Назначение |
 |---|---|
-| `@publish(#{ channelName?, routingKey?, exchange })` | Операция-publisher → `action: send`. Exchange-типы: `direct`, `fanout`. |
-| `@consume(#{ channelName?, routingKey?, queue })` | Операция-consumer → `action: receive`. |
+| `@publish(#{ channelName?, description?, routingKey?, exchange })` | Операция-publisher → `action: send`. Exchange-типы: `direct`, `fanout`. `description` — описание канала; если опущено, берётся из `@doc(...)` самой операции. |
+| `@consume(#{ channelName?, description?, routingKey?, queue })` | Операция-consumer → `action: receive`. `description` — описание канала; если опущено, берётся из `@doc(...)` самой операции. |
 | `@summary(text)` | Стандартный из `@typespec/compiler`. Short summary операции. |
 | `@message(#{ name?, summary? })` | Override параметров сгенерированного message. |
 | `@doc(text)` | Стандартный. Длинное описание (description). |
@@ -239,6 +242,8 @@ model M { payload: MPayload; }
 2. **Поле с `@doc`, ссылающееся на скаляр** — оборачивается в `allOf` с описанием. Копия поведения `@typespec/openapi3`: JSON Schema не допускает соседства `$ref` с `description`.
 3. **Namespace prefix**: вложенные namespace дают префикс через точку (`outer.Inner`). Top-level service-namespace в префикс не входит. Соответствует `@typespec/openapi3`.
 4. **AsyncAPI 3.0.0** — выбранная версия. 3.1 backward-совместима, но 3.0 проверена на широкой инструментальной поддержке.
+5. **Имя сообщения по умолчанию = имя модели payload верзатим.** `op X(): MyMessage` даёт ключ `MyMessage` в `components.messages` (без понижения регистра первой буквы). Если нужно отдельное имя — используйте `@message(#{ name: "..." })`.
+6. **Описание канала AMQP** наследуется от `@doc(...)` операции, если не задано явно в `@publish` / `@consume`. В подавляющем большинстве случаев канал и операция 1:1, и описание одно и то же — это убирает дублирование.
 
 ## Диагностика
 

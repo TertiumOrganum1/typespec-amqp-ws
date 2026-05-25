@@ -71,8 +71,8 @@ output-dir: "{project-root}/tsp-output"
 
 | Декоратор | Применяется к | Описание |
 |---|---|---|
-| `@publish(#{...})` | op | Операция-publisher → `action: send`. Поля: `channelName?`, `routingKey?`, `exchange: #{name, type: "direct"\|"fanout", durable?, autoDelete?}` |
-| `@consume(#{...})` | op | Операция-consumer → `action: receive`. Поля: `channelName?`, `routingKey?`, `queue: #{name, durable?, autoDelete?, exclusive?}` |
+| `@publish(#{...})` | op | Операция-publisher → `action: send`. Поля: `channelName?`, `description?`, `routingKey?`, `exchange: #{name, type: "direct"\|"fanout", durable?, autoDelete?}`. `description?` — описание канала; если опущено, берётся из `@doc(...)` самой операции. |
+| `@consume(#{...})` | op | Операция-consumer → `action: receive`. Поля: `channelName?`, `description?`, `routingKey?`, `queue: #{name, durable?, autoDelete?, exclusive?}`. `description?` — описание канала; если опущено, берётся из `@doc(...)` самой операции. |
 | `@message(#{...})` | op | Override параметров сообщения: `name?`, `summary?` |
 
 ### Декораторы WebSocket (namespace `TspAsyncApi.WebSocket`)
@@ -105,6 +105,9 @@ output-dir: "{project-root}/tsp-output"
 | `T[]` | `{type: array, items: <T>}` | slice / array |
 | `Record<T>` | `{type: object, additionalProperties: <T>}` | `map[string]T` / `Record<string, T>` |
 | literal `"foo"` (на поле модели) | `{type: string, const: "foo"}` | const-значение |
+| literal `1` (integer) | `{type: integer, const: 1}` | const integer (например, маркер версии формата) |
+| literal `1.5` (не integer) | `{type: string, const: "1.5"}` | float'ы не передаём по API — деградация в строку |
+| literal `true` / `false` | `{type: boolean, const: <value>}` | const boolean |
 | `T \| null` | `{type: [<base>, null]}` | pointer / nullable |
 | `field?: T` | поле не в `required` | optional |
 

@@ -150,6 +150,7 @@ channels:
     messages:
       EventMessage:
         $ref: '#/components/messages/EventMessage'
+    description: Channel for individual domain events
   announcement-broadcast:
     bindings:
       amqp:
@@ -161,6 +162,7 @@ channels:
     messages:
       AnnouncementMessage:
         $ref: '#/components/messages/AnnouncementMessage'
+    description: Fanout exchange — every bound queue receives the message.
   ack-requests:
     address: v1-events-ack
     bindings:
@@ -173,6 +175,7 @@ channels:
     messages:
       AckCommand:
         $ref: '#/components/messages/AckCommand'
+    description: Processes acknowledgement commands from downstream consumers.
 operations:
   publishEvent:
     action: send

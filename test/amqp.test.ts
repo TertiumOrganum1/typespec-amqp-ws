@@ -224,4 +224,81 @@ describe("amqp — channel/operation/message assembly", () => {
     expect(d.channels["my-cool-channel"]).toBeDefined();
     expect(d.operations.send.channel.$ref).toBe("#/channels/my-cool-channel");
   });
+
+  test("explicit description in @consume wins", async () => {
+    const r = await emit(
+      `
+      @service(#{ title: "X" })
+      @info(#{ version: "1.0.0" })
+      namespace X;
+      model Cmd { id: string; }
+      @consume(#{
+        description: "явное описание канала",
+        routingKey: "rk",
+        queue: #{ name: "q" },
+      })
+      @doc("документация операции")
+      op recv(): Cmd;
+    `,
+      "amqp",
+    );
+    expectNoErrors(r);
+    const d = r.doc as any;
+    expect(d.channels.recv.description).toBe("явное описание канала");
+    expect(d.operations.recv.description).toBe("документация операции");
+  });
+
+  test("explicit description in @publish wins", async () => {
+    const r = await emit(
+      `
+      @service(#{ title: "X" })
+      @info(#{ version: "1.0.0" })
+      namespace X;
+      model E { id: string; }
+      @publish(#{
+        description: "канал для бродкаста",
+        exchange: #{ name: "ex", type: "fanout" },
+      })
+      op broadcast(): E;
+    `,
+      "amqp",
+    );
+    expectNoErrors(r);
+    expect((r.doc as any).channels.broadcast.description).toBe("канал для бродкаста");
+  });
+
+  test("channel description falls back to operation @doc when omitted", async () => {
+    const r = await emit(
+      `
+      @service(#{ title: "X" })
+      @info(#{ version: "1.0.0" })
+      namespace X;
+      model Cmd { id: string; }
+      @consume(#{ routingKey: "rk", queue: #{ name: "q" } })
+      @doc("описание из @doc")
+      op recv(): Cmd;
+    `,
+      "amqp",
+    );
+    expectNoErrors(r);
+    const d = r.doc as any;
+    expect(d.channels.recv.description).toBe("описание из @doc");
+    expect(d.operations.recv.description).toBe("описание из @doc");
+  });
+
+  test("channel description omitted when neither set", async () => {
+    const r = await emit(
+      `
+      @service(#{ title: "X" })
+      @info(#{ version: "1.0.0" })
+      namespace X;
+      model Cmd { id: string; }
+      @consume(#{ routingKey: "rk", queue: #{ name: "q" } })
+      op recv(): Cmd;
+    `,
+      "amqp",
+    );
+    expectNoErrors(r);
+    expect((r.doc as any).channels.recv.description).toBeUndefined();
+  });
 });

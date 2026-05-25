@@ -48,6 +48,8 @@ function attachPublish(
   };
   channel.messages = channel.messages ?? {};
   channel.messages[messageKey] = { $ref: `#/components/messages/${messageKey}` };
+  const publishChannelDesc = config.description ?? getDoc(program, op);
+  if (publishChannelDesc) channel.description = publishChannelDesc;
   doc.channels![channelKey] = channel;
 
   registerMessage(program, doc, op, messageKey, returnTypeName);
@@ -75,6 +77,8 @@ function attachConsume(
   };
   channel.messages = channel.messages ?? {};
   channel.messages[messageKey] = { $ref: `#/components/messages/${messageKey}` };
+  const consumeChannelDesc = config.description ?? getDoc(program, op);
+  if (consumeChannelDesc) channel.description = consumeChannelDesc;
   doc.channels![channelKey] = channel;
 
   registerMessage(program, doc, op, messageKey, returnTypeName);

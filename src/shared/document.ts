@@ -82,6 +82,7 @@ export interface RefSchema {
 
 export interface StringSchema {
   type: "string";
+  title?: string;
   description?: string;
   enum?: string[];
   const?: string;

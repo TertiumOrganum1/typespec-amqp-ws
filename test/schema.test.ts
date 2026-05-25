@@ -60,6 +60,7 @@ describe("schema emitter — enums", () => {
     expectNoErrors(r);
     expect((r.doc as any).components.schemas.DeviceClass).toEqual({
       type: "string",
+      title: "DeviceClass",
       enum: ["Printer", "Scanner", "Scales"],
       description: "Класс устройства",
     });
@@ -73,6 +74,7 @@ describe("schema emitter — enums", () => {
     expectNoErrors(r);
     expect((r.doc as any).components.schemas.X).toEqual({
       type: "string",
+      title: "X",
       enum: ["A", "B"],
     });
   });

@@ -315,6 +315,7 @@ export class SchemaBuilder {
     const description = getDoc(this.program, e);
     const schema: Schema = {
       type: "string",
+      title: e.name,
       enum: values,
       ...(description ? { description } : {}),
     };

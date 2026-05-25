@@ -1,6 +1,6 @@
 {
   "name": "@etc-utils/typespec-amqp-ws",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "TypeSpec emitter for AsyncAPI 3.0 covering AMQP (RabbitMQ) and WebSocket transports",
   "license": "MIT",
   "type": "module",

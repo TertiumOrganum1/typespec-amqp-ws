@@ -59,6 +59,7 @@ components:
       description: Detailed event payload
     EventCategory:
       type: string
+      title: EventCategory
       enum:
         - Created
         - Updated
@@ -66,6 +67,7 @@ components:
       description: Category of an event
     Priority:
       type: string
+      title: Priority
       enum:
         - Low
         - Normal

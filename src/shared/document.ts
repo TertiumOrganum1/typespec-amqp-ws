@@ -33,6 +33,7 @@ export interface AsyncApiChannel {
   description?: string;
   messages?: Record<string, { $ref: string }>;
   bindings?: Record<string, unknown>;
+  parameters?: Record<string, { description: string }>;
 }
 
 export interface AsyncApiOperation {
@@ -57,13 +58,14 @@ export interface AsyncApiMessage {
   description?: string;
   contentType?: string;
   payload?: Schema | { $ref: string };
+  headers?: ObjectSchema;
 }
 
 /**
  * JSON Schema подмножество, которое мы реально генерируем.
  * Намеренно не пытаемся типизировать всё JSON Schema — только то, что эмиттим.
  */
-export type Schema =
+export type Schema = (
   | RefSchema
   | StringSchema
   | BooleanSchema
@@ -73,7 +75,21 @@ export type Schema =
   | NullableIntegerSchema
   | ArraySchema
   | ObjectSchema
-  | AllOfSchema;
+  | AllOfSchema) & SchemaAnnotations;
+
+export interface SchemaAnnotations {
+  format?: string;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  minimum?: number;
+  maximum?: number;
+  exclusiveMinimum?: number;
+  exclusiveMaximum?: number;
+  minItems?: number;
+  maxItems?: number;
+  default?: unknown;
+}
 
 export interface RefSchema {
   $ref: string;
@@ -86,7 +102,7 @@ export interface StringSchema {
   description?: string;
   enum?: string[];
   const?: string;
-  format?: "binary";
+  format?: string;
 }
 
 export interface BooleanSchema {

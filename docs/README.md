@@ -11,10 +11,10 @@
 
 `typespec-amqp-ws` — это TypeSpec-эмиттер, который превращает декларативное описание сервиса на TypeSpec в YAML-файл AsyncAPI 3.0. Поддерживает два транспорта:
 
-- **AMQP (RabbitMQ)** — publish в exchange, consume из очереди, exchange-типы `direct` и `fanout`.
+- **AMQP (RabbitMQ)** — publish в exchange, consume из очереди, exchange-типы `direct`, `fanout` и `topic`.
 - **WebSocket** — единый канал `/`, дискриминатор сообщений через literal-типы, request/reply, бинарные сообщения через `contentType: application/octet-stream`.
 
-Эмиттер задуман с осознанным **ограниченным** объёмом фич: только то, что реально нужно для микросервисов команды. Не Kafka, не MQTT, не security schemes, не topic-exchanges, не numeric enums. Из-за этого его реализация и API проще, чем у универсальных AsyncAPI-эмиттеров.
+Эмиттер задуман с осознанным **ограниченным** объёмом фич: только то, что реально нужно для микросервисов команды. Не Kafka, не MQTT, не security schemes, не numeric enums. Из-за этого его реализация и API проще, чем у универсальных AsyncAPI-эмиттеров.
 
 ## Минимальный пример
 

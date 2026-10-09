@@ -39,7 +39,7 @@ describe("amqp — @publish/@consume validation", () => {
       @info(#{ version: "1.0.0" })
       namespace X;
       model Msg { id: string; }
-      @publish(#{ routingKey: "rk", exchange: #{ name: "e", type: "topic" } })
+      @publish(#{ routingKey: "rk", exchange: #{ name: "e", type: "headers" } })
       op send(msg: Msg): void;
     `,
       "amqp",

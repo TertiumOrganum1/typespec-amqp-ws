@@ -139,7 +139,7 @@ describe("schema emitter — named scalars", () => {
     });
   });
 
-  test("field with @doc wraps $ref in allOf", async () => {
+  test("field with @doc preserves the named type reference", async () => {
     const r = await emit(`
       namespace T;
       scalar UUID extends string;
@@ -150,7 +150,7 @@ describe("schema emitter — named scalars", () => {
     `);
     expectNoErrors(r);
     expect((r.doc as any).components.schemas.M.properties.id).toEqual({
-      allOf: [{ $ref: "#/components/schemas/UUID" }],
+      $ref: "#/components/schemas/UUID",
       description: "идентификатор записи",
     });
   });

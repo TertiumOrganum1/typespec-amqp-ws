@@ -1,4 +1,4 @@
-import type { Program, Operation, Model } from "@typespec/compiler";
+import type { Program, Operation, Model, Scalar } from "@typespec/compiler";
 import { navigateProgram, getDoc, getSummary } from "@typespec/compiler";
 import { AmqpPublishKey, AmqpConsumeKey, MessageKey } from "../shared/state.js";
 import type {
@@ -38,7 +38,7 @@ function attachPublish(
   const ctx = prepareCommon(program, doc, op, config.channelName, messageModel);
 
   const channel: AsyncApiChannel = doc.channels![ctx.channelKey] ?? {};
-  if (config.routingKey) channel.address = config.routingKey;
+  setAddress(channel, config.routingKey);
   channel.bindings = {
     ...(channel.bindings ?? {}),
     amqp: {
@@ -67,7 +67,7 @@ function attachConsume(
   const ctx = prepareCommon(program, doc, op, config.channelName, messageModel);
 
   const channel: AsyncApiChannel = doc.channels![ctx.channelKey] ?? {};
-  if (config.routingKey) channel.address = config.routingKey;
+  setAddress(channel, config.routingKey);
   channel.bindings = {
     ...(channel.bindings ?? {}),
     amqp: {
@@ -96,7 +96,7 @@ function prepareCommon(
   doc: AsyncApiDoc,
   op: Operation,
   channelNameOverride: string | undefined,
-  messageModel: Model,
+  messageModel: Model | Scalar,
 ): PrepareCtx {
   const channelKey = channelNameOverride ?? op.name;
   const override = program.stateMap(MessageKey).get(op) as MessageOverride | undefined;
@@ -121,6 +121,14 @@ function registerMessage(
   const message: AsyncApiMessage = {
     payload: { $ref: `#/components/schemas/${messageTypeName}` },
   };
+  if (override?.contentType) message.contentType = override.contentType;
+  if (override?.headers) {
+    message.headers = {
+      type: "object",
+      properties: Object.fromEntries(Object.entries(override.headers).map(([name, description]) =>
+        [name, { type: "string", description }])),
+    };
+  }
   if (override?.summary) message.summary = override.summary;
   doc.components!.messages![messageKey] = message;
 }
@@ -145,7 +153,7 @@ function registerOperation(
   doc.operations![op.name] = operation;
 }
 
-function extractParamModel(program: Program, op: Operation): Model | undefined {
+function extractParamModel(program: Program, op: Operation): Model | Scalar | undefined {
   const params = [...op.parameters.properties.values()];
   if (params.length === 0) {
     reportDiagnostic(program, {
@@ -164,7 +172,7 @@ function extractParamModel(program: Program, op: Operation): Model | undefined {
     return undefined;
   }
   const t = params[0]!.type;
-  if (t.kind !== "Model" || !t.name) {
+  if ((t.kind !== "Model" && t.kind !== "Scalar") || !t.name || (t.kind === "Scalar" && t.namespace?.name === "TypeSpec")) {
     reportDiagnostic(program, {
       code: "anonymous-param",
       target: op,
@@ -175,7 +183,7 @@ function extractParamModel(program: Program, op: Operation): Model | undefined {
   return t;
 }
 
-function extractReturnModel(program: Program, op: Operation): Model | undefined {
+function extractReturnModel(program: Program, op: Operation): Model | Scalar | undefined {
   const rt = op.returnType;
   if (rt.kind === "Intrinsic" && (rt.name === "void" || rt.name === "never")) {
     reportDiagnostic(program, {
@@ -185,7 +193,7 @@ function extractReturnModel(program: Program, op: Operation): Model | undefined 
     });
     return undefined;
   }
-  if (rt.kind !== "Model" || !rt.name) {
+  if ((rt.kind !== "Model" && rt.kind !== "Scalar") || !rt.name || (rt.kind === "Scalar" && rt.namespace?.name === "TypeSpec")) {
     reportDiagnostic(program, {
       code: "anonymous-return",
       target: op,
@@ -194,6 +202,16 @@ function extractReturnModel(program: Program, op: Operation): Model | undefined 
     return undefined;
   }
   return rt;
+}
+
+function setAddress(channel: AsyncApiChannel, routingKey: string | undefined): void {
+  if (!routingKey) return;
+  channel.address = routingKey;
+  const parameters = [...routingKey.matchAll(/\{([^{}]+)\}/g)];
+  if (parameters.length) {
+    channel.parameters = Object.fromEntries(parameters.map(([, name]) =>
+      [name!, { description: `Routing key parameter: ${name}.` }]));
+  }
 }
 
 function cleanExchange(e: ExchangeConfig): Record<string, unknown> {

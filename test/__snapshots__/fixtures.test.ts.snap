@@ -37,8 +37,7 @@ components:
         category:
           $ref: '#/components/schemas/EventCategory'
         priority:
-          allOf:
-            - $ref: '#/components/schemas/Priority'
+          $ref: '#/components/schemas/Priority'
           description: Optional priority override
         tags:
           type: array
@@ -77,8 +76,7 @@ components:
       type: object
       properties:
         uid:
-          allOf:
-            - $ref: '#/components/schemas/Uuid'
+          $ref: '#/components/schemas/Uuid'
           description: Unique message identifier
         sentAt:
           $ref: '#/components/schemas/Microseconds'
@@ -100,8 +98,7 @@ components:
       type: object
       properties:
         uid:
-          allOf:
-            - $ref: '#/components/schemas/Uuid'
+          $ref: '#/components/schemas/Uuid'
           description: Announcement identifier
         message:
           type: string
@@ -115,8 +112,7 @@ components:
       type: object
       properties:
         uid:
-          allOf:
-            - $ref: '#/components/schemas/Uuid'
+          $ref: '#/components/schemas/Uuid'
           description: Identifier of the original message being acknowledged
         success:
           type: boolean

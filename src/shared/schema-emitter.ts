@@ -12,6 +12,9 @@ import {
   getDoc,
   isArrayModelType,
   isRecordModelType,
+  getFormat, getPattern, getMinLength, getMaxLength,
+  getMinValue, getMaxValue, getMinValueExclusive, getMaxValueExclusive,
+  getMinItems, getMaxItems, serializeValueAsJson,
 } from "@typespec/compiler";
 
 /** Скип stdlib и наших собственных library-моделей (TspAsyncApi.*) */
@@ -48,7 +51,7 @@ function capitalize(s: string): string {
   return s.length === 0 ? s : s[0]!.toUpperCase() + s.slice(1);
 }
 import { reportDiagnostic } from "./lib.js";
-import type { Schema } from "./document.js";
+import type { Schema, SchemaAnnotations } from "./document.js";
 
 const ID_REGEX = /^[a-zA-Z][a-zA-Z0-9_]*$/;
 
@@ -223,7 +226,15 @@ export class SchemaBuilder {
       }
       const baseSchema = this.schemaFor(prop.type);
       const propDoc = getDoc(this.program, prop);
-      properties[propName] = this.attachDescription(baseSchema, propDoc);
+      const annotations = this.annotations(prop);
+      const constrainedRef = "$ref" in baseSchema && Object.keys(annotations).some((key) => key !== "format");
+      // Draft-07 игнорирует ограничения рядом с $ref, поэтому для них нужен allOf.
+      const fieldSchema: Schema = constrainedRef ? { allOf: [baseSchema] } : baseSchema;
+      properties[propName] = {
+        ...this.attachDescription(fieldSchema, propDoc),
+        ...annotations,
+        ...(prop.defaultValue ? { default: serializeValueAsJson(this.program, prop.defaultValue, prop.type) } : {}),
+      };
       if (!prop.optional) required.push(propName);
     }
 
@@ -240,14 +251,11 @@ export class SchemaBuilder {
 
   /**
    * Прикрепляет description к field-схеме.
-   * Если схема — $ref, оборачивает в allOf (JSON Schema запрещает соседство $ref с другими полями).
-   * Иначе — добавляет description inline.
+   * Description - аннотация, не ограничение валидации. Не оборачиваем $ref
+   * в allOf: Modelina иначе превращает ссылку на enum в отдельный object.
    */
   private attachDescription(schema: Schema, doc: string | undefined): Schema {
     if (!doc) return schema;
-    if ("$ref" in schema) {
-      return { allOf: [schema], description: doc };
-    }
     return { ...schema, description: doc } as Schema;
   }
 
@@ -268,7 +276,23 @@ export class SchemaBuilder {
     const schema: Schema = description
       ? ({ ...baseSchema, description } as Schema)
       : (baseSchema as Schema);
-    this.namedSchemas.set(key, schema);
+    this.namedSchemas.set(key, { ...schema, ...this.annotations(s) });
+  }
+
+  private annotations(type: Type): SchemaAnnotations {
+    const values: SchemaAnnotations = {
+      format: getFormat(this.program, type),
+      pattern: getPattern(this.program, type),
+      minLength: getMinLength(this.program, type),
+      maxLength: getMaxLength(this.program, type),
+      minimum: getMinValue(this.program, type),
+      maximum: getMaxValue(this.program, type),
+      exclusiveMinimum: getMinValueExclusive(this.program, type),
+      exclusiveMaximum: getMaxValueExclusive(this.program, type),
+      minItems: getMinItems(this.program, type),
+      maxItems: getMaxItems(this.program, type),
+    };
+    return Object.fromEntries(Object.entries(values).filter(([, value]) => value !== undefined));
   }
 
   private rootBaseScalar(s: Scalar): Scalar | undefined {

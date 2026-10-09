@@ -2,7 +2,7 @@
 
 TypeSpec-эмиттер для генерации **AsyncAPI 3.0** спецификаций из лаконичных TypeSpec-описаний. Поддерживает два транспорта:
 
-- **AMQP** (RabbitMQ): publish в exchange, consume из queue, типы exchange `direct` и `fanout`.
+- **AMQP** (RabbitMQ): publish в exchange, consume из queue, типы exchange `direct`, `fanout` и `topic`.
 - **WebSocket**: единый канал `/`, дискриминатор сообщений через literal-типы, request/reply, бинарные сообщения.
 
 Эмиттер сознательно **ограничен** — поддерживает только то подмножество AsyncAPI, которое реально применяется на практике в типичных микросервисах с RabbitMQ и WebSocket. Это упрощает реализацию, валидацию и сопровождение.
@@ -219,7 +219,7 @@ model M { payload: MPayload; }
 
 | Декоратор | Назначение |
 |---|---|
-| `@publish(#{ channelName?, description?, routingKey?, exchange })` | Операция-publisher → `action: send`. Exchange-типы: `direct`, `fanout`. Payload — параметр операции (`op X(msg: M): void`). `description` — описание канала; fallback на `@doc(...)` операции. |
+| `@publish(#{ channelName?, description?, routingKey?, exchange })` | Операция-publisher → `action: send`. Exchange-типы: `direct`, `fanout`, `topic`. Payload — параметр операции (`op X(msg: M): void`). `description` — описание канала; fallback на `@doc(...)` операции. |
 | `@consume(#{ channelName?, description?, routingKey?, queue })` | Операция-consumer → `action: receive`. Принимаемое сообщение — returnType (`op X(): M`). `description` — описание канала; fallback на `@doc(...)` операции. |
 | `@summary(text)` | Стандартный из `@typespec/compiler`. Short summary операции. |
 | `@message(#{ name?, summary? })` | Override параметров сгенерированного message. |
@@ -237,7 +237,7 @@ model M { payload: MPayload; }
 ## Принципы преобразования
 
 1. **`additionalProperties: false`** — по умолчанию на всех моделях. Намеренное отличие от `@typespec/openapi3`: мы не разрешаем произвольные поля без явного указания.
-2. **Поле с `@doc`, ссылающееся на скаляр** — оборачивается в `allOf` с описанием. Копия поведения `@typespec/openapi3`: JSON Schema не допускает соседства `$ref` с `description`.
+2. **Именованный тип с `@doc`** сохраняет `$ref` и описание без лишней модели. Ограничения поверх `$ref` оборачиваются в `allOf`, чтобы их учитывали валидаторы Draft-07.
 3. **Namespace prefix**: вложенные namespace дают префикс через точку (`outer.Inner`). Top-level service-namespace в префикс не входит. Соответствует `@typespec/openapi3`.
 4. **AsyncAPI 3.0.0** — выбранная версия. 3.1 backward-совместима, но 3.0 проверена на широкой инструментальной поддержке.
 5. **Имя сообщения по умолчанию = имя модели payload верзатим.** Для `@consume op X(): MyMessage` и для `@publish op X(msg: MyMessage)` ключ в `components.messages` — `MyMessage` (без понижения регистра первой буквы). Если нужно отдельное имя — используйте `@message(#{ name: "..." })`.
@@ -251,7 +251,7 @@ model M { payload: MPayload; }
 - `unsupported-sized-int`, `unsupported-int64`, `unsupported-float`, `unsupported-fuzzy-numeric`, `unsupported-temporal`, `unsupported-url` — попытка использовать запрещённый тип.
 - `anonymous-model`, `anonymous-return` — анонимная inline-модель.
 - `non-string-enum`, `invalid-enum-value` — некорректный enum.
-- `unknown-exchange-type` — неподдерживаемый тип exchange (только `direct`, `fanout`).
+- `unknown-exchange-type` — неподдерживаемый тип exchange (только `direct`, `fanout`, `topic`).
 - `unsupported-union` — union, не являющийся `T | null`.
 - `missing-doc` (warning) — модель/enum без `@doc`.
 
@@ -260,7 +260,7 @@ model M { payload: MPayload; }
 Намеренно **не реализовано** в v1 — добавляется при реальной потребности:
 
 - Транспорты Kafka, MQTT, HTTP/SSE, SNS/SQS.
-- Exchange types `topic`, `headers`.
+- Exchange type `headers`.
 - AsyncAPI security schemes.
 - `correlationId`.
 - Traits (`channelTraits`, `operationTraits`, `messageTraits`).

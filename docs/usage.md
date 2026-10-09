@@ -71,9 +71,9 @@ output-dir: "{project-root}/tsp-output"
 
 | Декоратор | Применяется к | Описание |
 |---|---|---|
-| `@publish(#{...})` | op | Операция-publisher → `action: send`. Поля: `channelName?`, `description?`, `routingKey?`, `exchange: #{name, type: "direct"\|"fanout", durable?, autoDelete?}`. Payload — параметр операции (`op X(msg: M): void`). |
+| `@publish(#{...})` | op | Операция-publisher → `action: send`. Поля: `channelName?`, `description?`, `routingKey?`, `exchange: #{name, type: "direct"\|"fanout"\|"topic", durable?, autoDelete?}`. Payload — параметр операции (`op X(msg: M): void`). |
 | `@consume(#{...})` | op | Операция-consumer → `action: receive`. Поля: `channelName?`, `description?`, `routingKey?`, `queue: #{name, durable?, autoDelete?, exclusive?}`. Принимаемое сообщение — returnType (`op X(): M`). |
-| `@message(#{...})` | op | Override параметров сообщения: `name?`, `summary?` |
+| `@message(#{...})` | op | Параметры сообщения: `name?`, `summary?`, `contentType?`, `headers?: Record<string>` (имя строкового header -> описание) |
 
 ### Декораторы WebSocket (namespace `TspAsyncApi.WebSocket`)
 
@@ -123,6 +123,8 @@ output-dir: "{project-root}/tsp-output"
 | `safeint`/`numeric` | Неоднозначно для кодогенерации. Используйте `integer`. |
 | `utcDateTime`/`plainDate`/`plainTime`/`duration` | Дата/время — это `string` в RFC-3339 с пояснением в `@doc`. TypeScript-кодген иначе подставляет `Date`, что ломает разбор в разных локалях. |
 | `url` | URL — это `string`. |
+
+Стандартные `@format`, `@pattern`, `@minLength`/`@maxLength`, `@minValue`/`@maxValue`, `@minItems`/`@maxItems` и значения по умолчанию переносятся в JSON Schema. Описания рядом с именованными типами не создают дополнительные модели через `allOf`; ограничения поверх `$ref` используют `allOf` для корректной валидации Draft-07.
 
 Эмиттер также **запрещает анонимные inline-модели в полях**:
 
@@ -191,6 +193,31 @@ op sendNotification(): Notification;
 @summary("Обработать подтверждение доставки")
 op handleAck(): Notification;
 ```
+
+## Бинарное сообщение AMQP
+
+В файле моделей объявляется именованный скаляр:
+
+```typespec
+@doc("Бинарные байты PDF без JSON и base64.")
+scalar PdfResult extends bytes;
+```
+
+Операция использует его как payload:
+
+```typespec
+@publish(#{
+  routingKey: "pdf.{uid}",
+  exchange: #{ name: "results", type: "topic", durable: true },
+})
+@message(#{
+  contentType: "application/pdf",
+  headers: #{ `u-trace-id`: "Идентификатор трейса" },
+})
+op sendPdf(result: PdfResult): void;
+```
+
+`@consume` также принимает именованный скаляр в return type. Для `{uid}` в routing key создаётся `channels.parameters.uid`. Native AMQP `CorrelationId` не объявляется как JSON header: это отдельное свойство сообщения, которое задаёт транспортный код.
 
 ## Полный пример: WebSocket с дискриминатором и reply
 
@@ -262,7 +289,7 @@ op sendMessage(): SendMessage;
 - `unsupported-sized-int`, `unsupported-int64`, `unsupported-float`, `unsupported-fuzzy-numeric`, `unsupported-temporal`, `unsupported-url` — попытка использовать запрещённый тип.
 - `anonymous-model`, `anonymous-return` — анонимная inline-модель в поле или return type.
 - `non-string-enum`, `invalid-enum-value` — некорректный enum (numeric или не-идентификаторное значение).
-- `unknown-exchange-type` — `topic` или `headers` exchange (вне scope).
+- `unknown-exchange-type` — `headers` exchange (вне scope).
 - `unsupported-union` — union, не являющийся `T | null`.
 - `missing-doc` (warning) — модель/enum без `@doc`.
 
@@ -271,12 +298,12 @@ op sendMessage(): SendMessage;
 Намеренно **не реализовано** в v1 — добавляется по запросу при реальной потребности:
 
 - Транспорты Kafka, MQTT, HTTP/SSE, SNS/SQS.
-- Exchange types `topic`, `headers`.
+- Exchange type `headers`.
 - AsyncAPI security schemes.
 - `correlationId`.
 - Traits (`channelTraits`, `operationTraits`, `messageTraits`).
 - AsyncAPI extensions (`x-` properties).
-- Polymorphism: пользовательские `oneOf`/`anyOf`/`allOf` (внутренний `allOf` для $ref+description — используется автоматически).
+- Polymorphism: пользовательские `oneOf`/`anyOf`/`allOf` (`allOf` используется для ограничений поверх именованных типов).
 - TypeSpec `@versioned` интеграция.
 - Numeric-валуированные enum.
 - `@tag` на operations.

@@ -9,7 +9,7 @@ model ExchangeConfig {
   @doc("Имя exchange в RabbitMQ")
   name: string;
 
-  @doc("Тип exchange: direct либо fanout")
+  @doc("Тип exchange: direct, fanout либо topic")
   type: string;
 
   @doc("Переживает рестарт брокера")
@@ -71,6 +71,12 @@ model MessageOverride {
 
   @doc("Краткое описание сообщения")
   summary?: string;
+
+  @doc("MIME-тип тела сообщения.")
+  contentType?: string;
+
+  @doc("Строковые AMQP headers: имя -> описание.")
+  headers?: Record<string>;
 }
 
 /**

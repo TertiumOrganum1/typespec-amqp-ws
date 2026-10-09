@@ -109,7 +109,7 @@ export const $lib = createTypeSpecLibrary({
     "unknown-exchange-type": {
       severity: "error",
       messages: {
-        default: paramMessage`Неизвестный тип exchange: '${"type"}'. Поддерживаются: direct, fanout.`,
+        default: paramMessage`Неизвестный тип exchange: '${"type"}'. Поддерживаются: direct, fanout, topic.`,
       },
     },
     "missing-doc": {

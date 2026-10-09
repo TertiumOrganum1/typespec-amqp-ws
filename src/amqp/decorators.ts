@@ -32,7 +32,7 @@ export interface ConsumeConfig {
   queue?: QueueConfig;
 }
 
-const ALLOWED_EXCHANGE_TYPES = new Set(["direct", "fanout"]);
+const ALLOWED_EXCHANGE_TYPES = new Set(["direct", "fanout", "topic"]);
 
 export function $publish(
   context: DecoratorContext,
@@ -77,6 +77,8 @@ export function $consume(
 export interface MessageOverride {
   name?: string;
   summary?: string;
+  contentType?: string;
+  headers?: Record<string, string>;
 }
 
 export function $message(

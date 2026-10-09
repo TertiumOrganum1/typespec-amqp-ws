@@ -122,13 +122,6 @@ function registerMessage(
     payload: { $ref: `#/components/schemas/${messageTypeName}` },
   };
   if (override?.contentType) message.contentType = override.contentType;
-  if (override?.headers) {
-    message.headers = {
-      type: "object",
-      properties: Object.fromEntries(Object.entries(override.headers).map(([name, description]) =>
-        [name, { type: "string", description }])),
-    };
-  }
   if (override?.summary) message.summary = override.summary;
   doc.components!.messages![messageKey] = message;
 }

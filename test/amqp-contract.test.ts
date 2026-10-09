@@ -13,16 +13,16 @@ test("builtin scalar payload requires a named declaration", async () => {
   expect(r.diagnostics.some((d) => d.code.endsWith("/anonymous-return"))).toBe(true);
 });
 
-test("topic routing parameters, named binary payload and trace headers", async () => {
+test("topic routing parameters and named binary payload", async () => {
   const r = await emit(`
     namespace Reports;
     @doc("Raw PDF bytes")
     scalar Pdf extends bytes;
     @publish(#{ routingKey: "pdf.{uid}", exchange: #{ name: "results", type: "topic" } })
-    @message(#{ contentType: "application/pdf", headers: #{ \`u-trace-id\`: "Trace identifier" } })
+    @message(#{ contentType: "application/pdf" })
     op send(pdf: Pdf): void;
     @consume(#{ routingKey: "pdf.{uid}", queue: #{ name: "results" } })
-    @message(#{ contentType: "application/pdf", headers: #{ \`u-trace-id\`: "Trace identifier" } })
+    @message(#{ contentType: "application/pdf" })
     op receive(): Pdf;
   `);
   expectNoErrors(r);
@@ -32,9 +32,7 @@ test("topic routing parameters, named binary payload and trace headers", async (
   expect(d.channels.receive.parameters.uid).toBeDefined();
   expect(d.components.schemas.Pdf).toMatchObject({ type: "string", format: "binary" });
   expect(d.components.messages.Pdf.contentType).toBe("application/pdf");
-  expect(d.components.messages.Pdf.headers.properties["u-trace-id"]).toEqual({
-    type: "string", description: "Trace identifier",
-  });
+  expect(d.components.messages.Pdf.headers).toBeUndefined();
   expect(d.components.messages.Pdf.correlationId).toBeUndefined();
 });
 

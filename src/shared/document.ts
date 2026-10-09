@@ -58,7 +58,6 @@ export interface AsyncApiMessage {
   description?: string;
   contentType?: string;
   payload?: Schema | { $ref: string };
-  headers?: ObjectSchema;
 }
 
 /**

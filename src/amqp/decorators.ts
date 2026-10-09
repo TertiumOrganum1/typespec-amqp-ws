@@ -78,7 +78,6 @@ export interface MessageOverride {
   name?: string;
   summary?: string;
   contentType?: string;
-  headers?: Record<string, string>;
 }
 
 export function $message(

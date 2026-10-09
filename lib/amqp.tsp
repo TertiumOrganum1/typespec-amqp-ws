@@ -74,9 +74,6 @@ model MessageOverride {
 
   @doc("MIME-тип тела сообщения.")
   contentType?: string;
-
-  @doc("Строковые AMQP headers: имя -> описание.")
-  headers?: Record<string>;
 }
 
 /**

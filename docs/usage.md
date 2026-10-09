@@ -73,7 +73,7 @@ output-dir: "{project-root}/tsp-output"
 |---|---|---|
 | `@publish(#{...})` | op | Операция-publisher → `action: send`. Поля: `channelName?`, `description?`, `routingKey?`, `exchange: #{name, type: "direct"\|"fanout"\|"topic", durable?, autoDelete?}`. Payload — параметр операции (`op X(msg: M): void`). |
 | `@consume(#{...})` | op | Операция-consumer → `action: receive`. Поля: `channelName?`, `description?`, `routingKey?`, `queue: #{name, durable?, autoDelete?, exclusive?}`. Принимаемое сообщение — returnType (`op X(): M`). |
-| `@message(#{...})` | op | Параметры сообщения: `name?`, `summary?`, `contentType?`, `headers?: Record<string>` (имя строкового header -> описание) |
+| `@message(#{...})` | op | Параметры сообщения: `name?`, `summary?`, `contentType?` |
 
 ### Декораторы WebSocket (namespace `TspAsyncApi.WebSocket`)
 
@@ -212,7 +212,6 @@ scalar PdfResult extends bytes;
 })
 @message(#{
   contentType: "application/pdf",
-  headers: #{ `u-trace-id`: "Идентификатор трейса" },
 })
 op sendPdf(result: PdfResult): void;
 ```

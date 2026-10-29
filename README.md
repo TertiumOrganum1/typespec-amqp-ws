@@ -67,6 +67,8 @@ options:
 
 Swagger UI в GitLab показывает операции свёрнутыми, и это не настраивается из файла. Если нужен документ, который читается сразу целиком, есть опция `markdown-output-file` (например, `asyncapi.md`): те же операции и модели таблицами, с оглавлением и ссылками между моделями.
 
+**Версии.** Витрины пишутся с 1.0.11, но 1.0.11 выдаёт OpenAPI 3.1, который GitLab не показывает, — для превью нужна **1.0.12+**. В CI `service_template` опции передаются через `tsp compile --option` только при эмиттере `>=1.0.11` (`npm ls`), так что сервису достаточно поднять версию `@etc-utils/typespec-amqp-ws` в `asyncapi/package.json` до 1.0.12: `asyncapi.openapi.yaml` и `README.md` (Markdown-витрина) появятся в репозитории AsyncAPI сами.
+
 Подробнее — в [docs/usage.md](docs/usage.md#openapi-витрина-для-gitlab).
 
 ## Полный AMQP-пример

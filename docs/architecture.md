@@ -17,11 +17,12 @@ TypeSpec compiler AST + decorator state map
 │  ├─ SchemaBuilder     (модели/enum/scalars)    │
 │  ├─ buildAmqp  либо  buildWs                   │
 │  │   (channels + operations + messages)        │
-│  └─ serialize → YAML/JSON                      │
+│  ├─ serialize → YAML/JSON                      │
+│  └─ toOpenApiView → serialize (по опции)       │
 └────────────────────────────────────────────────┘
         │
         ▼ writeFile
-asyncapi.yaml (или .json)
+asyncapi.yaml (или .json) [+ *.openapi.yaml]
 ```
 
 Эмиттер построен на **`@typespec/asset-emitter`** — тот же фреймворк, на котором работают официальные `@typespec/openapi3` и `@typespec/json-schema`. Это даёт нам стандартные механизмы для разрешения `$ref`-ссылок, именования схем, обхода типов компилятора.
@@ -45,6 +46,9 @@ asyncapi/
 │   │   ├── schema-emitter.ts      # SchemaBuilder: TypeSpec → JSON Schema
 │   │   ├── decorators-service.ts  # @info, @server (namespace = "TspAsyncApi")
 │   │   ├── asyncapi-emitter.ts    # оркестратор emitAsyncApi()
+│   │   ├── openapi-view.ts        # toOpenApiView(): AsyncApiDoc → OpenAPI 3.1-витрина
+│   │   ├── markdown-view.ts       # toMarkdownView(): AsyncApiDoc → Markdown-витрина
+│   │   ├── view-common.ts         # общее для витрин: разыменование, порядок операций, таблицы
 │   │   └── yaml-writer.ts         # сериализация YAML/JSON
 │   ├── amqp/
 │   │   ├── index.ts               # $onEmit для AMQP-таргета
@@ -268,6 +272,14 @@ doc.components.messages[messageKey] = {
 ### 6. Сериализация
 
 `yaml.dump(doc, { lineWidth: 120, noRefs: true, sortKeys: false })`. `sortKeys: false` сохраняет порядок вставки полей в JS-объекте — поэтому документ читается в логическом порядке (asyncapi → info → servers → channels → operations → components).
+
+### 7. OpenAPI-витрина
+
+Если задана опция `openapi-output-file`, после записи основного файла `emitAsyncApi` вызывает `toOpenApiView(doc)` из `src/shared/openapi-view.ts` и пишет результат тем же `serialize` в тот же каталог. Конвертер — чистая функция над готовым `AsyncApiDoc`: декораторы и `Program` он не читает, поэтому AMQP и WS обслуживаются одним кодом, а транспорт определяется по документу (есть `bindings.amqp` у каналов — AMQP, иначе WebSocket). Исходный документ не меняется: всё, что попадает в витрину, копируется через `structuredClone`, а основной файл к этому моменту уже сериализован.
+
+Конвертер разыменовывает цепочку `operation.messages → channels.X.messages.Y → components.messages.Y`, кладёт каждую операцию в `webhooks` (Swagger UI 5 рисует их без Try it out), описывает транспорт markdown-таблицей в `description`, а bindings канала переносит как `x-<протокол>`. `components.schemas` копируется без изменений: всё, что генерирует `SchemaBuilder`, допустимо в OpenAPI 3.1 / JSON Schema 2020-12, поэтому `$ref` из AsyncAPI работают как есть. Типы документа (`OpenApiDoc` и соседние) описаны в том же модуле и покрывают только то, что реально эмиттим.
+
+Опция `markdown-output-file` включает вторую витрину — `toMarkdownView(doc)` из `src/shared/markdown-view.ts`, тоже чистую функцию над `AsyncApiDoc`. Разыменование ссылок, порядок операций и таблица транспорта у витрин общие и лежат в `src/shared/view-common.ts`, поэтому OpenAPI и Markdown описывают операции одинаково. Markdown-витрина сама считает якоря заголовков по правилам GitLab, чтобы ссылки на модели и операции работали в просмотрщике репозитория.
 
 ## Тестирование
 

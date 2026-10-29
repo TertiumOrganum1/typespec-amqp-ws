@@ -18,9 +18,9 @@ interface ToolResult {
   dir?: string;
 }
 
-function writeYaml(yamlText: string): { dir: string; yamlPath: string } {
+function writeYaml(yamlText: string, fileName = "asyncapi.yaml"): { dir: string; yamlPath: string } {
   const dir = mkdtempSync(join(tmpdir(), "tspamqp-"));
-  const yamlPath = join(dir, "asyncapi.yaml");
+  const yamlPath = join(dir, fileName);
   writeFileSync(yamlPath, yamlText);
   return { dir, yamlPath };
 }
@@ -45,11 +45,15 @@ export function runModelina(yamlText: string, language: "golang" | "typescript")
 }
 
 /** Запускает redocly lint. */
-export function runRedocly(yamlText: string): ToolResult {
+export function runRedocly(
+  yamlText: string,
+  opts: { fileName?: string; skipRules?: string[] } = {},
+): ToolResult {
   if (!HAS_REDOCLY) return { ok: false, error: "redocly CLI not installed" };
-  const { dir, yamlPath } = writeYaml(yamlText);
+  const { dir, yamlPath } = writeYaml(yamlText, opts.fileName);
+  const skip = ["info-license", ...(opts.skipRules ?? [])].map((rule) => `--skip-rule=${rule}`);
   try {
-    execFileSync("redocly", ["lint", yamlPath, "--skip-rule=info-license"], { stdio: "pipe" });
+    execFileSync("redocly", ["lint", yamlPath, ...skip], { stdio: "pipe" });
     return { ok: true };
   } catch (e) {
     const err = e as { stderr?: Buffer; stdout?: Buffer; message?: string };

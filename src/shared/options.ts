@@ -4,6 +4,10 @@ export interface EmitterOptions {
   "file-type"?: "yaml" | "json";
   "output-file"?: string;
   "new-line"?: "lf" | "crlf";
+  /** Имя файла OpenAPI 3.1-витрины рядом с основным выводом. Не задано — витрина не пишется. */
+  "openapi-output-file"?: string;
+  /** Имя файла Markdown-витрины рядом с основным выводом. Не задано — витрина не пишется. */
+  "markdown-output-file"?: string;
 }
 
 export const EmitterOptionsSchema: JSONSchemaType<EmitterOptions> = {
@@ -26,6 +30,14 @@ export const EmitterOptionsSchema: JSONSchemaType<EmitterOptions> = {
       enum: ["lf", "crlf"],
       nullable: true,
       default: "lf",
+    },
+    "openapi-output-file": {
+      type: "string",
+      nullable: true,
+    },
+    "markdown-output-file": {
+      type: "string",
+      nullable: true,
     },
   },
   required: [],

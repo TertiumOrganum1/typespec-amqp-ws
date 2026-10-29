@@ -24,12 +24,15 @@ npm install -D @etc-utils/typespec-amqp-ws @typespec/compiler @typespec/asset-em
 emit:
   - "@etc-utils/typespec-amqp-ws/amqp"
 options:
-  "@etc-utils/typespec-amqp-ws/amqp":
+  "@etc-utils/typespec-amqp-ws":
     file-type: yaml          # yaml | json. Default: yaml
     output-file: "asyncapi.yaml"
     new-line: "lf"           # lf | crlf. Default: lf
+    openapi-output-file: "amqp.openapi.yaml"  # необязательно, см. ниже
 output-dir: "{project-root}/tsp-output"
 ```
+
+Ключ в `options` — имя пакета `@etc-utils/typespec-amqp-ws`, без `/amqp` и `/ws`: компилятор TypeSpec ищет опции эмиттера по имени пакета из `package.json`. Опции под ключом `"@etc-utils/typespec-amqp-ws/amqp"` молча игнорируются.
 
 ```yaml
 # Для сервиса с WebSocket-API:
@@ -45,6 +48,26 @@ tsp compile .
 ```
 
 Полученный `asyncapi.yaml` можно скармливать `@asyncapi/cli` для генерации моделей на Go/TypeScript и `@redocly/cli` для документации.
+
+## OpenAPI-витрина для GitLab
+
+GitLab показывает AsyncAPI-файл как сырой YAML, а OpenAPI рендерит через Swagger UI. Опция `openapi-output-file` пишет рядом с `asyncapi.yaml` второй файл — OpenAPI 3.1, построенный из того же документа:
+
+```yaml
+options:
+  "@etc-utils/typespec-amqp-ws":
+    output-file: asyncapi.yaml
+    openapi-output-file: amqp.openapi.yaml
+```
+
+- GitLab включает Swagger UI, только если в имени файла есть `openapi` (или `swagger`), а расширение — `yaml`, `yml` или `json`.
+- Все операции лежат в разделе **Webhooks** под ключами `принимает <routing key>` / `публикует <routing key>`, у них нет кнопки Try it out. Транспорт (exchange, очередь, параметры routing key) — таблицей в описании операции.
+- Модели сообщений — в разделе **Schemas**, `components.schemas` совпадает с AsyncAPI.
+- Это витрина, а не источник: кодогенерация и проверки идут только от `asyncapi.yaml`. Без опции вывод эмиттера не меняется.
+
+Swagger UI в GitLab показывает операции свёрнутыми, и это не настраивается из файла. Если нужен документ, который читается сразу целиком, есть опция `markdown-output-file` (например, `asyncapi.md`): те же операции и модели таблицами, с оглавлением и ссылками между моделями.
+
+Подробнее — в [docs/usage.md](docs/usage.md#openapi-витрина-для-gitlab).
 
 ## Полный AMQP-пример
 

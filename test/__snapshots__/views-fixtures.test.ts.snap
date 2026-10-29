@@ -1,0 +1,954 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`витрины: openapi-output-file и markdown-output-file > example-amqp: Markdown-витрина (snapshot), asyncapi.yaml не меняется 1`] = `
+"# Example AMQP Service 1.0.0
+
+End-to-end test fixture covering AMQP publish/consume features.
+
+**Витрина AsyncAPI-документа.** Этот файл построен из AsyncAPI-описания сервиса
+только для просмотра; кодогенерация и проверки идут от AsyncAPI.
+Транспорт: **AMQP**.
+
+| Сервер | Protocol | Host | Pathname | Описание |
+|---|---|---|---|---|
+| \`rabbit\` | \`amqp\` | \`rabbit.example.com:5672\` | \`/example\` | Example RabbitMQ broker |
+
+Операции — в разделах «Принимает» и «Публикует»: «принимает» — сервис получает сообщение,
+«публикует» — сервис отправляет.
+
+## Содержание
+
+- [Принимает](#принимает)
+  - [consumeAck](#consumeack) — \`v1-events-ack\` — consume acknowledgement commands
+- [Публикует](#публикует)
+  - [publishEvent](#publishevent) — \`v1-events-created\` — publish a new event
+  - [broadcastAnnouncement](#broadcastannouncement) — \`announcement-broadcast\` — broadcast an announcement to all subscribers
+- [Модели](#модели) — 9
+
+## Принимает
+
+### consumeAck
+
+**принимает** \`v1-events-ack\` — consume acknowledgement commands
+
+Processes acknowledgement commands from downstream consumers.
+
+| Поле | Значение |
+|---|---|
+| Направление | принимает — сервис получает сообщение |
+| Routing key | \`v1-events-ack\` |
+| Очередь | \`ack-requests-queue\` |
+| Очередь durable | \`true\` |
+| Очередь autoDelete | \`false\` |
+| Сообщение | [AckCommand](#ackcommand) |
+| Content type | \`application/json\` |
+
+**Сообщение** [AckCommand](#ackcommand) · \`application/json\`
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`uid\` | [Uuid](#uuid) | да | Identifier of the original message being acknowledged |
+| \`success\` | \`boolean\` | да | Whether the consumer processed the message successfully |
+| \`error\` | \`string\` |  | Optional error description |
+
+## Публикует
+
+### publishEvent
+
+**публикует** \`v1-events-created\` — publish a new event
+
+Publishes a domain event onto the events exchange.
+
+Channel for individual domain events
+
+| Поле | Значение |
+|---|---|
+| Направление | публикует — сервис отправляет сообщение |
+| Routing key | \`v1-events-created\` |
+| Exchange | \`events-exchange\` |
+| Тип exchange | \`direct\` |
+| Exchange durable | \`true\` |
+| Сообщение | [EventMessage](#eventmessage) |
+| Content type | \`application/json\` |
+
+**Сообщение** [EventMessage](#eventmessage) · \`application/json\`
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`uid\` | [Uuid](#uuid) | да | Unique message identifier |
+| \`sentAt\` | [Microseconds](#microseconds) | да |  |
+| \`payload\` | [EventPayload](#eventpayload) | да |  |
+
+### broadcastAnnouncement
+
+**публикует** \`announcement-broadcast\` — broadcast an announcement to all subscribers
+
+Fanout exchange — every bound queue receives the message.
+
+| Поле | Значение |
+|---|---|
+| Направление | публикует — сервис отправляет сообщение |
+| Exchange | \`announcements-fanout\` |
+| Тип exchange | \`fanout\` |
+| Exchange durable | \`true\` |
+| Сообщение | [AnnouncementMessage](#announcementmessage) |
+| Content type | \`application/json\` |
+
+**Сообщение** [AnnouncementMessage](#announcementmessage) · \`application/json\`
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`uid\` | [Uuid](#uuid) | да | Announcement identifier |
+| \`message\` | \`string\` | да | Announcement text |
+
+## Модели
+
+| Модель | Описание |
+|---|---|
+| [Tag](#tag) | Key-value tag attached to events |
+| [EventPayload](#eventpayload) | Detailed event payload |
+| [EventCategory](#eventcategory) | Category of an event |
+| [Priority](#priority) | Priority of a notification |
+| [EventMessage](#eventmessage) | Event message sent on the events exchange |
+| [Uuid](#uuid) | UUID v7 identifier |
+| [Microseconds](#microseconds) | Unix timestamp microseconds as string (to avoid 64-bit precision loss) |
+| [AnnouncementMessage](#announcementmessage) | Broadcast announcement, sent via fanout |
+| [AckCommand](#ackcommand) | Acknowledgement command from a consumer back to the producer |
+
+### Tag
+
+Key-value tag attached to events
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`name\` | \`string\` | да | Tag name |
+| \`value\` | \`string\` | да | Tag value |
+
+### EventPayload
+
+Detailed event payload
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`text\` | \`string\` | да | Free-form text |
+| \`category\` | [EventCategory](#eventcategory) | да |  |
+| \`priority\` | [Priority](#priority) |  | Optional priority override |
+| \`tags\` | [Tag](#tag)[] | да | Arbitrary tags |
+| \`extra\` | \`map\` string → \`string\` | да | Arbitrary extension parameters |
+
+### EventCategory
+
+Category of an event
+
+Тип: \`string\`; значения: \`Created\`, \`Updated\`, \`Deleted\`
+
+### Priority
+
+Priority of a notification
+
+Тип: \`string\`; значения: \`Low\`, \`Normal\`, \`High\`
+
+### EventMessage
+
+Event message sent on the events exchange
+
+Сообщение операций: [publishEvent](#publishevent)
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`uid\` | [Uuid](#uuid) | да | Unique message identifier |
+| \`sentAt\` | [Microseconds](#microseconds) | да |  |
+| \`payload\` | [EventPayload](#eventpayload) | да |  |
+
+### Uuid
+
+UUID v7 identifier
+
+Тип: \`string\`
+
+### Microseconds
+
+Unix timestamp microseconds as string (to avoid 64-bit precision loss)
+
+Тип: \`string\`
+
+### AnnouncementMessage
+
+Broadcast announcement, sent via fanout
+
+Сообщение операций: [broadcastAnnouncement](#broadcastannouncement)
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`uid\` | [Uuid](#uuid) | да | Announcement identifier |
+| \`message\` | \`string\` | да | Announcement text |
+
+### AckCommand
+
+Acknowledgement command from a consumer back to the producer
+
+Сообщение операций: [consumeAck](#consumeack)
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`uid\` | [Uuid](#uuid) | да | Identifier of the original message being acknowledged |
+| \`success\` | \`boolean\` | да | Whether the consumer processed the message successfully |
+| \`error\` | \`string\` |  | Optional error description |
+"
+`;
+
+exports[`витрины: openapi-output-file и markdown-output-file > example-amqp: OpenAPI-витрина (snapshot) 1`] = `
+"openapi: 3.1.0
+info:
+  title: Example AMQP Service
+  version: 1.0.0
+  description: |-
+    End-to-end test fixture covering AMQP publish/consume features.
+
+    ---
+
+    **Витрина AsyncAPI-документа.** Этот файл построен из AsyncAPI-описания сервиса
+    только для просмотра; кодогенерация и проверки идут от AsyncAPI.
+    Транспорт: **AMQP**.
+
+    | Сервер | Protocol | Host | Pathname | Описание |
+    |---|---|---|---|---|
+    | \`rabbit\` | \`amqp\` | \`rabbit.example.com:5672\` | \`/example\` | Example RabbitMQ broker |
+
+    Операции — в разделе **Webhooks**: «принимает» — сервис получает сообщение,
+    «публикует» — сервис отправляет.
+servers:
+  - url: amqp://rabbit.example.com:5672/example
+    description: rabbit — Example RabbitMQ broker
+security: []
+tags:
+  - name: принимает
+    description: Сервис получает сообщение
+  - name: публикует
+    description: Сервис отправляет сообщение
+webhooks:
+  принимает v1-events-ack:
+    post:
+      operationId: consumeAck
+      summary: consume acknowledgement commands
+      description: |-
+        Processes acknowledgement commands from downstream consumers.
+
+        | Поле | Значение |
+        |---|---|
+        | Направление | принимает — сервис получает сообщение |
+        | Routing key | \`v1-events-ack\` |
+        | Очередь | \`ack-requests-queue\` |
+        | Очередь durable | \`true\` |
+        | Очередь autoDelete | \`false\` |
+        | Сообщение | \`AckCommand\` |
+        | Content type | \`application/json\` |
+      tags:
+        - принимает
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AckCommand'
+      x-amqp:
+        is: queue
+        queue:
+          name: ack-requests-queue
+          durable: true
+          autoDelete: false
+  публикует v1-events-created:
+    post:
+      operationId: publishEvent
+      summary: publish a new event
+      description: |-
+        Publishes a domain event onto the events exchange.
+
+        Channel for individual domain events
+
+        | Поле | Значение |
+        |---|---|
+        | Направление | публикует — сервис отправляет сообщение |
+        | Routing key | \`v1-events-created\` |
+        | Exchange | \`events-exchange\` |
+        | Тип exchange | \`direct\` |
+        | Exchange durable | \`true\` |
+        | Сообщение | \`EventMessage\` |
+        | Content type | \`application/json\` |
+      tags:
+        - публикует
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventMessage'
+      x-amqp:
+        is: routingKey
+        exchange:
+          name: events-exchange
+          type: direct
+          durable: true
+  публикует announcement-broadcast:
+    post:
+      operationId: broadcastAnnouncement
+      summary: broadcast an announcement to all subscribers
+      description: |-
+        Fanout exchange — every bound queue receives the message.
+
+        | Поле | Значение |
+        |---|---|
+        | Направление | публикует — сервис отправляет сообщение |
+        | Exchange | \`announcements-fanout\` |
+        | Тип exchange | \`fanout\` |
+        | Exchange durable | \`true\` |
+        | Сообщение | \`AnnouncementMessage\` |
+        | Content type | \`application/json\` |
+      tags:
+        - публикует
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnouncementMessage'
+      x-amqp:
+        is: routingKey
+        exchange:
+          name: announcements-fanout
+          type: fanout
+          durable: true
+components:
+  schemas:
+    Tag:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Tag name
+        value:
+          type: string
+          description: Tag value
+      required:
+        - name
+        - value
+      additionalProperties: false
+      description: Key-value tag attached to events
+    EventPayload:
+      type: object
+      properties:
+        text:
+          type: string
+          description: Free-form text
+        category:
+          $ref: '#/components/schemas/EventCategory'
+        priority:
+          $ref: '#/components/schemas/Priority'
+          description: Optional priority override
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+          description: Arbitrary tags
+        extra:
+          type: object
+          additionalProperties:
+            type: string
+          description: Arbitrary extension parameters
+      required:
+        - text
+        - category
+        - tags
+        - extra
+      additionalProperties: false
+      description: Detailed event payload
+    EventCategory:
+      type: string
+      title: EventCategory
+      enum:
+        - Created
+        - Updated
+        - Deleted
+      description: Category of an event
+    Priority:
+      type: string
+      title: Priority
+      enum:
+        - Low
+        - Normal
+        - High
+      description: Priority of a notification
+    EventMessage:
+      type: object
+      properties:
+        uid:
+          $ref: '#/components/schemas/Uuid'
+          description: Unique message identifier
+        sentAt:
+          $ref: '#/components/schemas/Microseconds'
+        payload:
+          $ref: '#/components/schemas/EventPayload'
+      required:
+        - uid
+        - sentAt
+        - payload
+      additionalProperties: false
+      description: Event message sent on the events exchange
+    Uuid:
+      type: string
+      description: UUID v7 identifier
+    Microseconds:
+      type: string
+      description: Unix timestamp microseconds as string (to avoid 64-bit precision loss)
+    AnnouncementMessage:
+      type: object
+      properties:
+        uid:
+          $ref: '#/components/schemas/Uuid'
+          description: Announcement identifier
+        message:
+          type: string
+          description: Announcement text
+      required:
+        - uid
+        - message
+      additionalProperties: false
+      description: Broadcast announcement, sent via fanout
+    AckCommand:
+      type: object
+      properties:
+        uid:
+          $ref: '#/components/schemas/Uuid'
+          description: Identifier of the original message being acknowledged
+        success:
+          type: boolean
+          description: Whether the consumer processed the message successfully
+        error:
+          type: string
+          description: Optional error description
+      required:
+        - uid
+        - success
+      additionalProperties: false
+      description: Acknowledgement command from a consumer back to the producer
+"
+`;
+
+exports[`витрины: openapi-output-file и markdown-output-file > example-ws: Markdown-витрина (snapshot), asyncapi.yaml не меняется 1`] = `
+"# Example WebSocket Service 2.3.4
+
+End-to-end test fixture covering WebSocket emitter features.
+
+**Витрина AsyncAPI-документа.** Этот файл построен из AsyncAPI-описания сервиса
+только для просмотра; кодогенерация и проверки идут от AsyncAPI.
+Транспорт: **WebSocket**.
+
+| Сервер | Protocol | Host | Pathname | Описание |
+|---|---|---|---|---|
+| \`public\` | \`ws\` | \`localhost:{port}\` | \`/v1/ws\` |  |
+
+Операции — в разделах «Принимает» и «Публикует»: «принимает» — сервис получает сообщение,
+«публикует» — сервис отправляет.
+
+Документация: [https://example.com/docs](https://example.com/docs)
+
+## Содержание
+
+- [Принимает](#принимает)
+  - [receivePing](#receiveping) — \`/\` — receive a ping from the server
+  - [updateAvailable](#updateavailable) — \`/\` — notification that an update is available
+- [Публикует](#публикует)
+  - [sendPong](#sendpong) — \`/\` — send a pong in response to a ping
+  - [echo](#echo) — \`/\` — ask server to echo a message and wait for the response
+  - [uploadUpdate](#uploadupdate) — \`/\` — upload the binary update blob
+- [Модели](#модели) — 10
+
+## Принимает
+
+### receivePing
+
+**принимает** \`/\` — receive a ping from the server
+
+| Поле | Значение |
+|---|---|
+| Направление | принимает — сервис получает сообщение |
+| Канал | \`/\` |
+| Сообщение | [Ping](#ping) |
+| Content type | \`application/json\` |
+
+**Сообщение** [Ping](#ping) · \`application/json\`
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`eventType\` | \`string\` | да | константа \`"ping"\` |
+| \`msgUid\` | \`string\` | да |  |
+| \`payload\` | [PingPayload](#pingpayload) | да |  |
+
+### updateAvailable
+
+**принимает** \`/\` — notification that an update is available
+
+| Поле | Значение |
+|---|---|
+| Направление | принимает — сервис получает сообщение |
+| Канал | \`/\` |
+| Сообщение | [UpdateAvailable](#updateavailable-1) |
+| Content type | \`application/json\` |
+
+**Сообщение** [UpdateAvailable](#updateavailable-1) · \`application/json\`
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`eventType\` | \`string\` | да | константа \`"updateAvailable"\` |
+| \`msgUid\` | \`string\` | да |  |
+| \`payload\` | [UpdateAvailablePayload](#updateavailablepayload) | да |  |
+
+## Публикует
+
+### sendPong
+
+**публикует** \`/\` — send a pong in response to a ping
+
+| Поле | Значение |
+|---|---|
+| Направление | публикует — сервис отправляет сообщение |
+| Канал | \`/\` |
+| Сообщение | [Pong](#pong) |
+| Content type | \`application/json\` |
+
+**Сообщение** [Pong](#pong) · \`application/json\`
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`eventType\` | \`string\` | да | константа \`"pong"\` |
+| \`msgUid\` | \`string\` | да |  |
+| \`payload\` | [PongPayload](#pongpayload) | да |  |
+
+### echo
+
+**публикует** \`/\` — ask server to echo a message and wait for the response
+
+| Поле | Значение |
+|---|---|
+| Направление | публикует — сервис отправляет сообщение |
+| Канал | \`/\` |
+| Сообщение | [EchoRequest](#echorequest) |
+| Content type | \`application/json\` |
+| Ответ | [EchoResponse](#echoresponse) |
+| Content type ответа | \`application/json\` |
+
+**Сообщение** [EchoRequest](#echorequest) · \`application/json\`
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`eventType\` | \`string\` | да | константа \`"echoRequest"\` |
+| \`msgUid\` | \`string\` | да |  |
+| \`payload\` | [EchoRequestPayload](#echorequestpayload) | да |  |
+
+**Ответ** [EchoResponse](#echoresponse) · \`application/json\`
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`eventType\` | \`string\` | да | константа \`"echoResponse"\` |
+| \`msgUid\` | \`string\` | да |  |
+| \`payload\` | [EchoResponsePayload](#echoresponsepayload) | да |  |
+
+### uploadUpdate
+
+**публикует** \`/\` — upload the binary update blob
+
+Бинарный фрейм без JSON-обёртки: [1B version][N bytes payload].
+
+| Поле | Значение |
+|---|---|
+| Направление | публикует — сервис отправляет сообщение |
+| Канал | \`/\` |
+| Сообщение | \`UploadUpdate\` |
+| Content type | \`application/octet-stream\` |
+
+**Сообщение** \`UploadUpdate\` · \`application/octet-stream\`
+
+Без схемы: бинарный фрейм, формат — в описании.
+
+## Модели
+
+| Модель | Описание |
+|---|---|
+| [PingPayload](#pingpayload) |  |
+| [PongPayload](#pongpayload) |  |
+| [EchoRequestPayload](#echorequestpayload) |  |
+| [EchoResponsePayload](#echoresponsepayload) |  |
+| [UpdateAvailablePayload](#updateavailablepayload) |  |
+| [Ping](#ping) | Server sends a periodic ping; client should reply with Pong |
+| [Pong](#pong) | Client responds to Ping |
+| [EchoRequest](#echorequest) | Client asks server to echo a message |
+| [EchoResponse](#echoresponse) | Server reply with the echoed text |
+| [UpdateAvailable](#updateavailable-1) | Server pushes notification that an update is available |
+
+### PingPayload
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`ts\` | \`string\` | да |  |
+
+### PongPayload
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`ts\` | \`string\` | да |  |
+
+### EchoRequestPayload
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`text\` | \`string\` | да |  |
+
+### EchoResponsePayload
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`text\` | \`string\` | да |  |
+
+### UpdateAvailablePayload
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`version\` | \`string\` | да |  |
+| \`url\` | \`string\` | да |  |
+
+### Ping
+
+Server sends a periodic ping; client should reply with Pong
+
+Сообщение операций: [receivePing](#receiveping)
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`eventType\` | \`string\` | да | константа \`"ping"\` |
+| \`msgUid\` | \`string\` | да |  |
+| \`payload\` | [PingPayload](#pingpayload) | да |  |
+
+### Pong
+
+Client responds to Ping
+
+Сообщение операций: [sendPong](#sendpong)
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`eventType\` | \`string\` | да | константа \`"pong"\` |
+| \`msgUid\` | \`string\` | да |  |
+| \`payload\` | [PongPayload](#pongpayload) | да |  |
+
+### EchoRequest
+
+Client asks server to echo a message
+
+Сообщение операций: [echo](#echo)
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`eventType\` | \`string\` | да | константа \`"echoRequest"\` |
+| \`msgUid\` | \`string\` | да |  |
+| \`payload\` | [EchoRequestPayload](#echorequestpayload) | да |  |
+
+### EchoResponse
+
+Server reply with the echoed text
+
+Сообщение операций: [echo](#echo)
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`eventType\` | \`string\` | да | константа \`"echoResponse"\` |
+| \`msgUid\` | \`string\` | да |  |
+| \`payload\` | [EchoResponsePayload](#echoresponsepayload) | да |  |
+
+### UpdateAvailable
+
+Server pushes notification that an update is available
+
+Сообщение операций: [updateAvailable](#updateavailable)
+
+| Поле | Тип | Обязательное | Описание |
+|---|---|---|---|
+| \`eventType\` | \`string\` | да | константа \`"updateAvailable"\` |
+| \`msgUid\` | \`string\` | да |  |
+| \`payload\` | [UpdateAvailablePayload](#updateavailablepayload) | да |  |
+"
+`;
+
+exports[`витрины: openapi-output-file и markdown-output-file > example-ws: OpenAPI-витрина (snapshot) 1`] = `
+"openapi: 3.1.0
+info:
+  title: Example WebSocket Service
+  version: 2.3.4
+  description: |-
+    End-to-end test fixture covering WebSocket emitter features.
+
+    ---
+
+    **Витрина AsyncAPI-документа.** Этот файл построен из AsyncAPI-описания сервиса
+    только для просмотра; кодогенерация и проверки идут от AsyncAPI.
+    Транспорт: **WebSocket**.
+
+    | Сервер | Protocol | Host | Pathname | Описание |
+    |---|---|---|---|---|
+    | \`public\` | \`ws\` | \`localhost:{port}\` | \`/v1/ws\` |  |
+
+    Операции — в разделе **Webhooks**: «принимает» — сервис получает сообщение,
+    «публикует» — сервис отправляет.
+externalDocs:
+  url: https://example.com/docs
+servers:
+  - url: ws://localhost:{port}/v1/ws
+    description: public
+    variables:
+      port:
+        default: '8080'
+        description: WebSocket port
+security: []
+tags:
+  - name: принимает
+    description: Сервис получает сообщение
+  - name: публикует
+    description: Сервис отправляет сообщение
+webhooks:
+  принимает / (receivePing):
+    post:
+      operationId: receivePing
+      summary: receive a ping from the server
+      description: |-
+        | Поле | Значение |
+        |---|---|
+        | Направление | принимает — сервис получает сообщение |
+        | Канал | \`/\` |
+        | Сообщение | \`Ping\` |
+        | Content type | \`application/json\` |
+      tags:
+        - принимает
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ping'
+  принимает / (updateAvailable):
+    post:
+      operationId: updateAvailable
+      summary: notification that an update is available
+      description: |-
+        | Поле | Значение |
+        |---|---|
+        | Направление | принимает — сервис получает сообщение |
+        | Канал | \`/\` |
+        | Сообщение | \`UpdateAvailable\` |
+        | Content type | \`application/json\` |
+      tags:
+        - принимает
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAvailable'
+  публикует / (sendPong):
+    post:
+      operationId: sendPong
+      summary: send a pong in response to a ping
+      description: |-
+        | Поле | Значение |
+        |---|---|
+        | Направление | публикует — сервис отправляет сообщение |
+        | Канал | \`/\` |
+        | Сообщение | \`Pong\` |
+        | Content type | \`application/json\` |
+      tags:
+        - публикует
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pong'
+  публикует / (echo):
+    post:
+      operationId: echo
+      summary: ask server to echo a message and wait for the response
+      description: |-
+        | Поле | Значение |
+        |---|---|
+        | Направление | публикует — сервис отправляет сообщение |
+        | Канал | \`/\` |
+        | Сообщение | \`EchoRequest\` |
+        | Content type | \`application/json\` |
+        | Ответ | \`EchoResponse\` |
+        | Content type ответа | \`application/json\` |
+      tags:
+        - публикует
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EchoRequest'
+      responses:
+        '200':
+          description: 'Ответ: \`EchoResponse\`'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EchoResponse'
+  публикует / (uploadUpdate):
+    post:
+      operationId: uploadUpdate
+      summary: upload the binary update blob
+      description: |-
+        Бинарный фрейм без JSON-обёртки: [1B version][N bytes payload].
+
+        | Поле | Значение |
+        |---|---|
+        | Направление | публикует — сервис отправляет сообщение |
+        | Канал | \`/\` |
+        | Сообщение | \`UploadUpdate\` |
+        | Content type | \`application/octet-stream\` |
+      tags:
+        - публикует
+      requestBody:
+        required: true
+        description: |-
+          upload the binary update blob
+
+          Бинарный фрейм без JSON-обёртки: [1B version][N bytes payload].
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+components:
+  schemas:
+    PingPayload:
+      type: object
+      properties:
+        ts:
+          type: string
+      required:
+        - ts
+      additionalProperties: false
+    PongPayload:
+      type: object
+      properties:
+        ts:
+          type: string
+      required:
+        - ts
+      additionalProperties: false
+    EchoRequestPayload:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+        - text
+      additionalProperties: false
+    EchoResponsePayload:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+        - text
+      additionalProperties: false
+    UpdateAvailablePayload:
+      type: object
+      properties:
+        version:
+          type: string
+        url:
+          type: string
+      required:
+        - version
+        - url
+      additionalProperties: false
+    Ping:
+      type: object
+      properties:
+        eventType:
+          type: string
+          const: ping
+        msgUid:
+          type: string
+        payload:
+          $ref: '#/components/schemas/PingPayload'
+      required:
+        - eventType
+        - msgUid
+        - payload
+      additionalProperties: false
+      description: Server sends a periodic ping; client should reply with Pong
+    Pong:
+      type: object
+      properties:
+        eventType:
+          type: string
+          const: pong
+        msgUid:
+          type: string
+        payload:
+          $ref: '#/components/schemas/PongPayload'
+      required:
+        - eventType
+        - msgUid
+        - payload
+      additionalProperties: false
+      description: Client responds to Ping
+    EchoRequest:
+      type: object
+      properties:
+        eventType:
+          type: string
+          const: echoRequest
+        msgUid:
+          type: string
+        payload:
+          $ref: '#/components/schemas/EchoRequestPayload'
+      required:
+        - eventType
+        - msgUid
+        - payload
+      additionalProperties: false
+      description: Client asks server to echo a message
+    EchoResponse:
+      type: object
+      properties:
+        eventType:
+          type: string
+          const: echoResponse
+        msgUid:
+          type: string
+        payload:
+          $ref: '#/components/schemas/EchoResponsePayload'
+      required:
+        - eventType
+        - msgUid
+        - payload
+      additionalProperties: false
+      description: Server reply with the echoed text
+    UpdateAvailable:
+      type: object
+      properties:
+        eventType:
+          type: string
+          const: updateAvailable
+        msgUid:
+          type: string
+        payload:
+          $ref: '#/components/schemas/UpdateAvailablePayload'
+      required:
+        - eventType
+        - msgUid
+        - payload
+      additionalProperties: false
+      description: Server pushes notification that an update is available
+"
+`;

@@ -20,12 +20,14 @@ npm install -D @etc-utils/typespec-amqp-ws @typespec/compiler @typespec/asset-em
 emit:
   - "@etc-utils/typespec-amqp-ws/amqp"
 options:
-  "@etc-utils/typespec-amqp-ws/amqp":
+  "@etc-utils/typespec-amqp-ws":
     file-type: yaml          # yaml (default) или json
     output-file: "asyncapi.yaml"
     new-line: "lf"           # lf (default) или crlf
 output-dir: "{project-root}/tsp-output"
 ```
+
+Ключ в `options` — имя пакета без `/amqp` и `/ws`. Компилятор TypeSpec ищет опции эмиттера по полю `name` из `package.json`, поэтому опции под ключом `"@etc-utils/typespec-amqp-ws/amqp"` молча игнорируются, и эмиттер работает на значениях по умолчанию.
 
 ### Конфиг для WebSocket-сервиса
 
@@ -33,7 +35,7 @@ output-dir: "{project-root}/tsp-output"
 emit:
   - "@etc-utils/typespec-amqp-ws/ws"
 options:
-  "@etc-utils/typespec-amqp-ws/ws":
+  "@etc-utils/typespec-amqp-ws":
     file-type: yaml
     output-file: "asyncapi.yaml"
     new-line: "lf"
@@ -41,6 +43,71 @@ output-dir: "{project-root}/tsp-output"
 ```
 
 После компиляции (`tsp compile .`) сгенерированный YAML лежит в `tsp-output/@etc-utils/typespec-amqp-ws/asyncapi.yaml`. Дальнейший пайплайн (redocly lint, modelina codegen, документация) идёт от этого файла.
+
+### OpenAPI-витрина для GitLab
+
+GitLab не умеет показывать AsyncAPI: `asyncapi.yaml` открывается как сырой YAML. OpenAPI GitLab рендерит через Swagger UI. Опция `openapi-output-file` (по умолчанию не задана) пишет рядом с основным файлом OpenAPI 3.1, построенный из того же AsyncAPI-документа:
+
+```yaml
+emit:
+  - "@etc-utils/typespec-amqp-ws/amqp"
+options:
+  "@etc-utils/typespec-amqp-ws":
+    emitter-output-dir: "{output-dir}/@etc-utils/typespec-amqp-ws"
+    file-type: yaml
+    output-file: asyncapi.yaml
+    openapi-output-file: amqp.openapi.yaml
+output-dir: "{project-root}/tsp-output"
+```
+
+Результат — `tsp-output/@etc-utils/typespec-amqp-ws/amqp.openapi.yaml`. `file-type` и `new-line` общие с основным файлом. Опция работает для обоих таргетов, `/amqp` и `/ws`.
+
+**Имя файла.** GitLab включает Swagger UI, если в имени файла есть `openapi` или `swagger`, а расширение — `yaml`, `yml` или `json`. Подойдут `amqp.openapi.yaml`, `ws.openapi.yaml`, `openapi.yaml`.
+
+**Это витрина, а не источник.** Кодогенерации по OpenAPI-файлу нет, Modelina и экстракторы работают только с `asyncapi.yaml`. Без опции вывод эмиттера не меняется ни на байт; с опцией `asyncapi.yaml` тоже остаётся прежним.
+
+Как устроен документ:
+
+| Что | Где в OpenAPI |
+|---|---|
+| `info` | `info`; в описание дописан блок: что это витрина, транспорт, таблица серверов из AsyncAPI. `info.externalDocs` вынесен на верхний уровень — в OpenAPI он живёт там |
+| Операции (`receive` и `send`) | `webhooks`, метод `post`. Ключ — `принимает <address>` или `публикует <address>`; без адреса — имя канала. При совпадении ключей к ним дописывается `(<operationId>)`. Сначала все `receive`, потом все `send` |
+| `operationId`, `summary` | ключ операции AsyncAPI; `operation.summary`, иначе `message.summary` |
+| Транспорт | таблица в `description` операции: направление, routing key, exchange или очередь, сообщение, content type, параметры routing key |
+| `channel.parameters` | ещё и `parameters` операции (`in: path`), чтобы линтер принимал `{param}` в ключе webhook |
+| Bindings канала | `x-amqp` (и вообще `x-<протокол>`) — как есть, для машинного чтения |
+| Сообщение | `requestBody`, `content.<contentType>.schema` — ссылка `#/components/schemas/X` как в AsyncAPI. Без payload (WS `@binary`) — `application/octet-stream`, `{type: string, format: binary}` |
+| WS `reply` | `responses."200"` с сообщением ответа |
+| `components.schemas` | копия из AsyncAPI без изменений, включая схемы, на которые операции не ссылаются |
+| `servers` | `<protocol>://<host><pathname>` для каждого сервера AsyncAPI, переменные переносятся (`default` обязателен в OpenAPI — при отсутствии берётся первый `enum` или пустая строка). Нет серверов — заглушка `url: /`. Swagger UI показывает их только для справки |
+| `paths`, `components.messages` | не выводятся |
+
+Почему webhooks, а не paths: Swagger UI 5 показывает webhook-операции без кнопки Try it out, а для брокерных сообщений она бессмысленна. В `paths` её не отключить из спецификации.
+
+Параметры routing key (`{taskUid}` в `публикует pdf.{taskUid}`) дополнительно выводятся в `parameters` операции как `in: path`, `required: true`, `schema: {type: string}`: линтеры читают ключ webhook как шаблон пути и требуют описать каждый параметр. Swagger UI показывает их в блоке Parameters. `redocly lint` с recommended-конфигом проходит без ошибок; остаются предупреждения `info-license` (если у сервиса нет `license`) и `no-server-example.com` (если брокер описан как `localhost`).
+
+### Markdown-витрина
+
+Просмотрщик GitLab запускает Swagger UI со своими настройками: операции свёрнуты, внутри операции сначала показан пример JSON, а не схема. Из OpenAPI-файла это не меняется. Опция `markdown-output-file` (по умолчанию не задана) пишет рядом третий файл — Markdown, который GitLab показывает сразу целиком:
+
+```yaml
+options:
+  "@etc-utils/typespec-amqp-ws":
+    output-file: asyncapi.yaml
+    openapi-output-file: amqp.openapi.yaml
+    markdown-output-file: asyncapi.md
+```
+
+Что внутри:
+
+- заголовок, описание сервиса, блок «витрина» с таблицей серверов;
+- оглавление: операции по группам «Принимает» и «Публикует» (receive раньше send), ссылка на модели;
+- по операции: таблица транспорта (как в OpenAPI-витрине), параметры routing key и поля сообщения (и ответа WS) прямо таблицей;
+- раздел «Модели»: сводная таблица с первым предложением описания, затем каждая модель — поля, тип, обязательность, описание, ограничения и значения по умолчанию, ссылки на операции, которые её передают.
+
+Типы-модели в таблицах — ссылки на их разделы. Якоря строятся по правилам GitLab, совпадения нумеруются суффиксом `-1`. Угловые скобки в описаниях экранируются, иначе GitLab принял бы `<Template>_Data` за HTML-тег.
+
+Swagger UI разрешает `$ref` относительно адреса страницы. Если открыть локальный HTML со встроенной спекой через `file://`, ссылки не разворачиваются и все типы показываются как `any`; в GitLab (https) и через локальный HTTP-сервер всё работает.
 
 ## Структура проекта
 

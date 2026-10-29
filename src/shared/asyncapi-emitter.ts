@@ -6,8 +6,10 @@ import {
   type AsyncApiInfo,
   type AsyncApiServer,
 } from "./document.js";
+import { toMarkdownView } from "./markdown-view.js";
+import { toOpenApiView } from "./openapi-view.js";
 import { SchemaBuilder } from "./schema-emitter.js";
-import { serialize } from "./yaml-writer.js";
+import { applyNewLine, serialize } from "./yaml-writer.js";
 import { InfoKey, ServerKey } from "./state.js";
 import type { InfoOptions, ServerOptions } from "./decorators-service.js";
 import { buildAmqp } from "../amqp/builder.js";
@@ -40,12 +42,30 @@ export async function emitAsyncApi(
     buildWs(context.program, doc);
   }
 
-  const outputFile = context.options["output-file"] ?? "asyncapi.yaml";
-  const text = serialize(doc, {
+  const serializeOptions = {
     fileType: context.options["file-type"] ?? "yaml",
     newLine: context.options["new-line"] ?? "lf",
-  });
-  const outputPath = `${context.emitterOutputDir}/${outputFile}`;
+  } as const;
+  const outputFile = context.options["output-file"] ?? "asyncapi.yaml";
+  await writeOutput(context, outputFile, serialize(doc, serializeOptions));
+
+  // Витрина для GitLab: строится из готового AsyncAPI-документа, сам документ не меняет.
+  const openapiFile = context.options["openapi-output-file"];
+  if (openapiFile) {
+    await writeOutput(context, openapiFile, serialize(toOpenApiView(doc), serializeOptions));
+  }
+  const markdownFile = context.options["markdown-output-file"];
+  if (markdownFile) {
+    await writeOutput(context, markdownFile, applyNewLine(toMarkdownView(doc), serializeOptions.newLine));
+  }
+}
+
+async function writeOutput(
+  context: EmitContext<EmitterOptions>,
+  file: string,
+  text: string,
+): Promise<void> {
+  const outputPath = `${context.emitterOutputDir}/${file}`;
   // На реальной FS родительская директория может не существовать — создаём её.
   // mkdirp на host'е не предоставлен напрямую, поэтому через стандартный fs API.
   // В test-окружении host.writeFile сам создаст родителей; в production-режиме — нет.

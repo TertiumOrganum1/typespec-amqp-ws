@@ -46,7 +46,7 @@ asyncapi/
 │   │   ├── schema-emitter.ts      # SchemaBuilder: TypeSpec → JSON Schema
 │   │   ├── decorators-service.ts  # @info, @server (namespace = "TspAsyncApi")
 │   │   ├── asyncapi-emitter.ts    # оркестратор emitAsyncApi()
-│   │   ├── openapi-view.ts        # toOpenApiView(): AsyncApiDoc → OpenAPI 3.1-витрина
+│   │   ├── openapi-view.ts        # toOpenApiView(): AsyncApiDoc → OpenAPI 3.0-витрина
 │   │   ├── markdown-view.ts       # toMarkdownView(): AsyncApiDoc → Markdown-витрина
 │   │   ├── view-common.ts         # общее для витрин: разыменование, порядок операций, таблицы
 │   │   └── yaml-writer.ts         # сериализация YAML/JSON

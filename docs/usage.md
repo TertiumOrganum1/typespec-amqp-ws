@@ -46,7 +46,7 @@ output-dir: "{project-root}/tsp-output"
 
 ### OpenAPI-витрина для GitLab
 
-GitLab не умеет показывать AsyncAPI: `asyncapi.yaml` открывается как сырой YAML. OpenAPI GitLab рендерит через Swagger UI. Опция `openapi-output-file` (по умолчанию не задана) пишет рядом с основным файлом OpenAPI 3.1, построенный из того же AsyncAPI-документа:
+GitLab не умеет показывать AsyncAPI: `asyncapi.yaml` открывается как сырой YAML. OpenAPI GitLab рендерит через Swagger UI. Опция `openapi-output-file` (по умолчанию не задана) пишет рядом с основным файлом OpenAPI 3.0, построенный из того же AsyncAPI-документа:
 
 ```yaml
 emit:
@@ -71,20 +71,22 @@ output-dir: "{project-root}/tsp-output"
 | Что | Где в OpenAPI |
 |---|---|
 | `info` | `info`; в описание дописан блок: что это витрина, транспорт, таблица серверов из AsyncAPI. `info.externalDocs` вынесен на верхний уровень — в OpenAPI он живёт там |
-| Операции (`receive` и `send`) | `webhooks`, метод `post`. Ключ — `принимает <address>` или `публикует <address>`; без адреса — имя канала. При совпадении ключей к ним дописывается `(<operationId>)`. Сначала все `receive`, потом все `send` |
+| Операции (`receive` и `send`) | `paths`, метод `post`. Путь — `/принимает <address>` или `/публикует <address>`; без адреса — имя канала. При совпадении путей к ним дописывается `(<operationId>)`. Сначала все `receive`, потом все `send` |
 | `operationId`, `summary` | ключ операции AsyncAPI; `operation.summary`, иначе `message.summary` |
 | Транспорт | таблица в `description` операции: направление, routing key, exchange или очередь, сообщение, content type, параметры routing key |
-| `channel.parameters` | ещё и `parameters` операции (`in: path`), чтобы линтер принимал `{param}` в ключе webhook |
+| `channel.parameters` | ещё и `parameters` операции (`in: path`), чтобы линтер принимал `{param}` в пути |
 | Bindings канала | `x-amqp` (и вообще `x-<протокол>`) — как есть, для машинного чтения |
-| Сообщение | `requestBody`, `content.<contentType>.schema` — ссылка `#/components/schemas/X` как в AsyncAPI. Без payload (WS `@binary`) — `application/octet-stream`, `{type: string, format: binary}` |
-| WS `reply` | `responses."200"` с сообщением ответа |
-| `components.schemas` | копия из AsyncAPI без изменений, включая схемы, на которые операции не ссылаются |
+| Сообщение | `requestBody`, `content.<contentType>.schema` — ссылка `#/components/schemas/X` как в AsyncAPI. Схема payload приводится к диалекту 3.0 (см. ниже). Без payload (WS `@binary`) — `application/octet-stream`, `{type: string, format: binary}` |
+| WS `reply` | `responses."200"` с сообщением ответа; без reply — `responses."202"` «ответа нет» (в 3.0 `responses` обязателен) |
+| `components.schemas` | все схемы из AsyncAPI, включая те, на которые операции не ссылаются, в диалекте 3.0 |
 | `servers` | `<protocol>://<host><pathname>` для каждого сервера AsyncAPI, переменные переносятся (`default` обязателен в OpenAPI — при отсутствии берётся первый `enum` или пустая строка). Нет серверов — заглушка `url: /`. Swagger UI показывает их только для справки |
-| `paths`, `components.messages` | не выводятся |
+| `components.messages` | не выводится |
 
-Почему webhooks, а не paths: Swagger UI 5 показывает webhook-операции без кнопки Try it out, а для брокерных сообщений она бессмысленна. В `paths` её не отключить из спецификации.
+Почему OpenAPI 3.0, а не 3.1: GitLab перед показом разбирает файл своей сборкой swagger-client, и её ветка для 3.1 падает (`TypeError: i is not a function`) на любом документе — превью остаётся пустым. Из-за этого операции лежат в `paths` (в 3.0 нет `webhooks`), и у них есть кнопка Try it out; запрос по ней уйдёт в никуда, это ожидаемо.
 
-Параметры routing key (`{taskUid}` в `публикует pdf.{taskUid}`) дополнительно выводятся в `parameters` операции как `in: path`, `required: true`, `schema: {type: string}`: линтеры читают ключ webhook как шаблон пути и требуют описать каждый параметр. Swagger UI показывает их в блоке Parameters. `redocly lint` с recommended-конфигом проходит без ошибок; остаются предупреждения `info-license` (если у сервиса нет `license`) и `no-server-example.com` (если брокер описан как `localhost`).
+Схемы эмиттер пишет в JSON Schema 2020-12, а 3.0 понимает свой диалект, поэтому в витрине они переводятся: `type: [T, "null"]` → `type: T` + `nullable: true`, `const` → `enum` из одного значения, числовые `exclusiveMinimum`/`exclusiveMaximum` → `minimum`/`maximum` + `true`, `$ref` с соседними полями (например, `description`) → `allOf: [{$ref}]` + эти поля.
+
+Параметры routing key (`{taskUid}` в `публикует pdf.{taskUid}`) дополнительно выводятся в `parameters` операции как `in: path`, `required: true`, `schema: {type: string}`: линтеры читают путь как шаблон и требуют описать каждый параметр. Swagger UI показывает их в блоке Parameters. `redocly lint` с recommended-конфигом проходит без ошибок; остаются предупреждения `info-license` (если у сервиса нет `license`) и `no-server-example.com` (если брокер описан как `localhost`).
 
 ### Markdown-витрина
 

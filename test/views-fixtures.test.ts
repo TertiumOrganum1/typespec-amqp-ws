@@ -37,11 +37,11 @@ describe("витрины: openapi-output-file и markdown-output-file", () => {
       expectNoErrors(r);
       const text = r.outputs[f.file]!;
       const view = yaml.load(text) as Record<string, any>;
-      expect(view.openapi).toBe("3.1.0");
-      expect(view).not.toHaveProperty("paths");
+      expect(view.openapi).toBe("3.0.3");
+      expect(view).not.toHaveProperty("webhooks");
       expect(view.servers).toHaveLength(1);
-      expect(view.components.schemas).toEqual((r.doc as any).components.schemas);
-      expect(Object.keys(view.webhooks)).toHaveLength(Object.keys((r.doc as any).operations).length);
+      expect(Object.keys(view.components.schemas)).toEqual(Object.keys((r.doc as any).components.schemas));
+      expect(Object.keys(view.paths)).toHaveLength(Object.keys((r.doc as any).operations).length);
       expect(text).toMatchSnapshot();
     });
 
@@ -61,7 +61,7 @@ describe("витрины: openapi-output-file и markdown-output-file", () => {
         "openapi-output-file": "openapi.json",
       });
       expectNoErrors(r);
-      expect(JSON.parse(r.outputs["openapi.json"]!).openapi).toBe("3.1.0");
+      expect(JSON.parse(r.outputs["openapi.json"]!).openapi).toBe("3.0.3");
     });
   }
 });

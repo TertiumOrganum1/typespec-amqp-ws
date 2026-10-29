@@ -4,7 +4,7 @@ export interface EmitterOptions {
   "file-type"?: "yaml" | "json";
   "output-file"?: string;
   "new-line"?: "lf" | "crlf";
-  /** Имя файла OpenAPI 3.1-витрины рядом с основным выводом. Не задано — витрина не пишется. */
+  /** Имя файла OpenAPI 3.0-витрины рядом с основным выводом. Не задано — витрина не пишется. */
   "openapi-output-file"?: string;
   /** Имя файла Markdown-витрины рядом с основным выводом. Не задано — витрина не пишется. */
   "markdown-output-file"?: string;

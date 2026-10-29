@@ -51,7 +51,7 @@ tsp compile .
 
 ## OpenAPI-витрина для GitLab
 
-GitLab показывает AsyncAPI-файл как сырой YAML, а OpenAPI рендерит через Swagger UI. Опция `openapi-output-file` пишет рядом с `asyncapi.yaml` второй файл — OpenAPI 3.1, построенный из того же документа:
+GitLab показывает AsyncAPI-файл как сырой YAML, а OpenAPI рендерит через Swagger UI. Опция `openapi-output-file` пишет рядом с `asyncapi.yaml` второй файл — OpenAPI 3.0, построенный из того же документа:
 
 ```yaml
 options:
@@ -61,8 +61,8 @@ options:
 ```
 
 - GitLab включает Swagger UI, только если в имени файла есть `openapi` (или `swagger`), а расширение — `yaml`, `yml` или `json`.
-- Все операции лежат в разделе **Webhooks** под ключами `принимает <routing key>` / `публикует <routing key>`, у них нет кнопки Try it out. Транспорт (exchange, очередь, параметры routing key) — таблицей в описании операции.
-- Модели сообщений — в разделе **Schemas**, `components.schemas` совпадает с AsyncAPI.
+- Операции — в `paths` под путями `/принимает <routing key>` / `/публикует <routing key>`, метод POST. Версия 3.0, потому что 3.1 GitLab не отображает (его swagger-client падает на любом 3.1-документе). Транспорт (exchange, очередь, параметры routing key) — таблицей в описании операции.
+- Модели сообщений — в разделе **Schemas**: схемы из AsyncAPI, приведённые к диалекту OpenAPI 3.0 (`nullable`, `enum` вместо `const`).
 - Это витрина, а не источник: кодогенерация и проверки идут только от `asyncapi.yaml`. Без опции вывод эмиттера не меняется.
 
 Swagger UI в GitLab показывает операции свёрнутыми, и это не настраивается из файла. Если нужен документ, который читается сразу целиком, есть опция `markdown-output-file` (например, `asyncapi.md`): те же операции и модели таблицами, с оглавлением и ссылками между моделями.
